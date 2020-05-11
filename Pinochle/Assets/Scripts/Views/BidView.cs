@@ -39,7 +39,7 @@ public class BidView : MonoBehaviour
         {
             if (bid > CurBid || bid == 0)
             {
-                Client.Instance.HandleBid(CurBid, bid);
+                Client.Instance.SubmitBid(CurBid, bid);
                 ErrorText.text = string.Empty;
             }
             else

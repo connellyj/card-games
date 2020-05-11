@@ -95,14 +95,14 @@ public class GameView : MonoBehaviour
         DiscardButton.onClick.AddListener(() => {
             IEnumerable<Card> discards = GetSelectedCards();
             RemoveCards(discards);
-            Client.Instance.HandleDiscardKitty(discards);
+            Client.Instance.SubmitDiscardKitty(discards);
             lock (PlayedViews)
             {
                 PlayedViews = new List<CardView>();
             }
         });
         DiscardButton.onClick.AddListener(ResetButtonsAndSelections);
-        PlayButton.onClick.AddListener(() => { Client.Instance.HandleTurn(GetSelectedCards().Single()); });
+        PlayButton.onClick.AddListener(() => { Client.Instance.SubmitTurn(GetSelectedCards().Single()); });
         PlayButton.onClick.AddListener(ResetButtonsAndSelections);
         ClearButton.onClick.AddListener(ClearPlayedCards);
 

@@ -46,7 +46,7 @@ public class JoinView : MonoBehaviour
             string gameName = GameField.text.Trim();
             if (userName != string.Empty && gameName != string.Empty)
             {
-                response = Client.Instance.HandleJoinGame(userName, gameName);
+                response = Client.Instance.SubmitJoinGame(userName, gameName);
             }
             else
             {
@@ -57,7 +57,7 @@ public class JoinView : MonoBehaviour
         {
             if (userName != string.Empty && GameList.options.Count > 0)
             {
-                response = Client.Instance.HandleJoinGame(userName, GameList.options[GameList.value].text);
+                response = Client.Instance.SubmitJoinGame(userName, GameList.options[GameList.value].text);
             }
             else
             {

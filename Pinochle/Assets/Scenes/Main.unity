@@ -2972,7 +2972,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 246151567}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7fc0bc4643dbbd441a5e56ad4ba31a70, type: 3}
+  m_Script: {fileID: 11500000, guid: bb19c305460f5b446ba7a1eaea8ded92, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ScrollRect: {fileID: 1069434135}
@@ -3793,7 +3793,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 340759416}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d43961f82f75de419da312d4d3187ae, type: 3}
+  m_Script: {fileID: 11500000, guid: 19bca7e36f5e6ad43a1801582d2d8e8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   JacksAround: {fileID: 1351786696}
@@ -3945,6 +3945,7 @@ GameObject:
   - component: {fileID: 366578189}
   - component: {fileID: 366578188}
   - component: {fileID: 366578192}
+  - component: {fileID: 366578193}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -4048,6 +4049,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 349399f34f27d5f4391fc757a8990951, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &366578193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 366578187}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb9949591eefbd5429a8c229cf714a04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   JoinPopUp: {fileID: 549829767}
@@ -4807,6 +4820,11 @@ PrefabInstance:
       propertyPath: m_textInfo.pageCount
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6077745707972295102, guid: b3bccb3fae47ee64cac6d15636f3b3cd,
+        type: 3}
+      propertyPath: m_text
+      value: Create Game
+      objectReference: {fileID: 0}
     - target: {fileID: 6077745708796194381, guid: b3bccb3fae47ee64cac6d15636f3b3cd,
         type: 3}
       propertyPath: m_textInfo.characterCount
@@ -4990,7 +5008,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 453409365}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 93cc6dcb21d4eab4999bfbe4c0e8672d, type: 3}
+  m_Script: {fileID: 11500000, guid: 4c8ceee3505f58b4a9a865bef89710f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   UserField: {fileID: 220550055}
@@ -5760,6 +5778,11 @@ PrefabInstance:
       propertyPath: m_textInfo.pageCount
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6077745707972295102, guid: b3bccb3fae47ee64cac6d15636f3b3cd,
+        type: 3}
+      propertyPath: m_text
+      value: Join Game
+      objectReference: {fileID: 0}
     - target: {fileID: 6077745708529505770, guid: b3bccb3fae47ee64cac6d15636f3b3cd,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
@@ -5978,7 +6001,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 549829766}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 93cc6dcb21d4eab4999bfbe4c0e8672d, type: 3}
+  m_Script: {fileID: 11500000, guid: 4c8ceee3505f58b4a9a865bef89710f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   UserField: {fileID: 1501120687}
@@ -18191,7 +18214,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1391308289}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3d75ae406bf1c5a40ab1836519797a36, type: 3}
+  m_Script: {fileID: 11500000, guid: 7354ac0caa1fe0e4f956bd6a955b2c43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   SouthName: {fileID: 1001162171}
@@ -26443,7 +26466,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 6077745707495482122}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 13642639dc965a54a9795061dc57172a, type: 3}
+  m_Script: {fileID: 11500000, guid: bd1f1b173acb04b4f905701a39a69f7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   BidInput: {fileID: 1050273688}
@@ -27575,7 +27598,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 6077745709256252951}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ff6ee06180797f84ea4aa4dfb47b4aea, type: 3}
+  m_Script: {fileID: 11500000, guid: c70bdbf88a8860b44bb28504f8ddcad0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Clubs: {fileID: 785215079}

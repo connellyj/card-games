@@ -31,7 +31,7 @@ public class TrumpView : MonoBehaviour
     {
         if (Selected != null)
         {
-            Client.Instance.HandleTrump(TrumpMap[Selected]);
+            Client.Instance.SubmitTrump(TrumpMap[Selected]);
         }
     }
 

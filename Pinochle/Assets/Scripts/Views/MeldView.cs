@@ -79,7 +79,7 @@ public class MeldView : MonoBehaviour
         {
             ErrorText.gameObject.SetActive(false);
             ButtonEnabled = false;
-            Client.Instance.HandleMeld(Meld);
+            Client.Instance.SubmitMeld(Meld);
         }
     }
 
