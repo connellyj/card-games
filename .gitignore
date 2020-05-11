@@ -1,0 +1,17 @@
+Pinochle/.vs/*
+Pinochle/*.csproj
+Pinochle/Assets/TextMesh\ Pro/Examples\ &\ Extras/*
+Pinochle/Builds/*
+Pinochle/Library/*
+Pinochle/Logs/*
+Pinochle/Packages/*
+Pinochle/Temp/*
+Pinochle/obj/*
+Pinochle/*.sln
+
+PinochleServer/.vs/*
+PinochleServer/*.sln
+PinochleServer/PinochleServer/*.csproj
+PinochleServer/PinochleServer/bin/Debug/*
+PinochleServer/PinochleServer/obj/*
+PinochleServer/packages/*
