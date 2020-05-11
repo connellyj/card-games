@@ -1,4 +1,4 @@
-﻿namespace PinochleServer.Models
+﻿namespace CardGameServer.Models
 {
     class TrickMessage : Message
     {

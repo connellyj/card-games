@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace PinochleServer.Models
+namespace CardGameServer.Models
 {
     public class MeldMessage : Message
     { 

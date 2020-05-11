@@ -1,39 +1,19 @@
-﻿using PinochleServer.Models;
-using System;
+﻿using CardGameServer.Models;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PinochleServer
+namespace CardGameServer
 {
-    class GameManager
+    public abstract class GameManager
     {
-        public static readonly int MIN_PLAYERS = 3;
+        public static readonly int MIN_PLAYERS = 3; // TODO move to protected method
         public static readonly int NUM_CARDS = 15;
-        public static readonly int NUM_KITTY_CARDS = 3;
-        public static readonly int MIN_BID = 20;
-        public static readonly int ACES_AROUND = 10;
-        public static readonly int KINGS_AROUND = 8;
-        public static readonly int QUEENS_AROUND = 6;
-        public static readonly int JACKS_AROUND = 4;
-        public static readonly int DOUBLE_AROUND_MULTIPLIER = 10;
-        public static readonly int MARRIAGE = 2;
-        public static readonly int TRUMP_MARRIAGE = 4;
-        public static readonly int PINOCHLE = 4;
-        public static readonly int DOUBLE_PINOCHLE = 30;
-        public static readonly int TRUMP_NINE = 1;
-        public static readonly int TRUMP_RUN = 15;
 
         private readonly List<Player> Players;
-        private List<int> PassedPlayers;
         private List<Card> CurTrick;
-        private Card[] Kitty;
-        private string Trump;
         private int Dealer;
-        private int LastBidder;
         private int Leader;
         private int CurPlayer;
-        private int NumMeld;
-        private int CurBid;
 
         private static Dictionary<string, GameManager> GameMap;
         private static Dictionary<string, string> PlayerMap;
@@ -41,11 +21,8 @@ namespace PinochleServer
         public GameManager()
         {
             Players = new List<Player>();
-            PassedPlayers = new List<int>();
             CurTrick = new List<Card>();
             Dealer = 0;
-            NumMeld = 0;
-            CurBid = MIN_BID;
         }
 
         public static void Init()
@@ -70,7 +47,7 @@ namespace PinochleServer
             }
             else
             {
-                GameManager gm = new GameManager();
+                GameManager gm = new PinochleGameManager();
                 GameMap.Add(message.GameName, gm);
                 Server.Instance().Broadcast(new AvailableGamesMessage(GameMap.Keys.ToArray()));
                 gm.Join(message, uid, messageHash);
@@ -188,7 +165,13 @@ namespace PinochleServer
 
         private void StartRound()
         {
-            // deal cards
+            Deal();
+            CurPlayer = (Dealer + 1) % Players.Count;
+            DoStartRound(CurPlayer, Dealer);
+        }
+
+        private void Deal()
+        {
             Card[] deck = Deck.Shuffle();
             int idx = 0;
             foreach (Player p in Players)
@@ -197,145 +180,13 @@ namespace PinochleServer
                 idx++;
                 Server.Instance().Send(new StartMessage(p.Cards.ToArray()), p.Uid);
             }
-            Kitty = deck.Skip(idx * NUM_CARDS).Take(NUM_KITTY_CARDS).ToArray();
-
-            // initiate first turn
-            CurPlayer = (Dealer + 1) % Players.Count;
-            StartBid(Players[CurPlayer]);
-            SendMeldPoints();
-        }
-
-        private void StartBid(Player player)
-        {
-            LastBidder = Dealer;
-            Server.Instance().Send(new BidMessage(player.Name, MIN_BID), player.Uid);
-        }
-
-        private void HandleBid(BidMessage message)
-        {
-            // broadcast bid to all players
-            Broadcast(message);
-
-            // parse bid
-            CurBid = message.Bid;
-            if (message.Bid != 0)
+            if (deck.Length > idx * NUM_CARDS)
             {
-                LastBidder = CurPlayer;
-            }
-            else
-            {
-                CurBid = message.CurBid;
-                PassedPlayers.Add(CurPlayer);
-            }
-
-            // get next non-passed player
-            NextPlayer();
-            while (PassedPlayers.Contains(CurPlayer) && CurPlayer != LastBidder)
-            {
-                NextPlayer();
-            }
-
-            // initiate next turn
-            if (CurPlayer == LastBidder)
-            {
-                Broadcast(new BidMessage(Players[CurPlayer].Name, CurBid, CurBid));
-                PassedPlayers = new List<int>();
-                StartKitty(CurPlayer);
-            }
-            else
-            {
-                Player player = Players[CurPlayer];
-                Server.Instance().Send(new BidMessage(player.Name, CurBid), player.Uid);
+                DealExtraCards(deck.Skip(idx * NUM_CARDS));
             }
         }
 
-        private void StartKitty(int player)
-        {
-            Broadcast(new KittyMessage(Kitty, Players[player].Name));
-        }
-
-        private void HandleKitty(KittyMessage message)
-        {
-            // update player model
-            Player player = Players[CurPlayer];
-            player.Cards.AddRange(Kitty);
-            foreach (Card c in message.Kitty)
-            {
-                player.Cards.Remove(c);
-                if (TrickDecider.IsPoint(c))
-                {
-                    player.SecretScore++;
-                }
-            }
-
-            // initiate next turn
-            StartTrump(CurPlayer);
-        }
-
-        private void StartTrump(int player)
-        {
-            Server.Instance().Send(new TrumpMessage(Players[player].Name), Players[CurPlayer].Uid);
-        }
-
-        private void HandleTrump(TrumpMessage message)
-        {
-            // broadcast to all players
-            Broadcast(message);
-
-            Trump = message.TrumpSuit;
-
-            // initiate next turn
-            StartMeld(message.TrumpSuit);
-        }
-
-        private void SendMeldPoints()
-        {
-            MeldPointsMessage meldPoints = new MeldPointsMessage(ACES_AROUND, KINGS_AROUND, QUEENS_AROUND, JACKS_AROUND, 
-                DOUBLE_AROUND_MULTIPLIER, MARRIAGE, TRUMP_MARRIAGE, PINOCHLE, DOUBLE_PINOCHLE, TRUMP_NINE, TRUMP_RUN);
-            Broadcast(meldPoints);
-        }
-
-        private void StartMeld(string trump)
-        {
-            foreach (Player p in Players)
-            {
-                MeldCounter counter = new MeldCounter(p.Cards, trump);
-                p.MeldScore = counter.TotalMeld();
-                MeldMessage message = new MeldMessage(p.Name, trump)
-                {
-                    AcesAround = counter.AcesAround(),
-                    KingsAround = counter.KingsAround(),
-                    QueensAround = counter.QueensAround(),
-                    JacksAround = counter.JacksAround(),
-                    TrumpNine = counter.Nines(),
-                    Run = counter.Runs(),
-                    ClubsMarriage = counter.ClubsMarriage(),
-                    DiamondsMarriage = counter.DiamondsMarriage(),
-                    SpadesMarriage = counter.SpadesMarriage(),
-                    HeartsMarriage = counter.HeartsMarriage(),
-                    Pinochle = counter.Pinochle()
-                };
-                Server.Instance().Send(message, p.Uid);
-            }
-        }
-
-        private void HandleMeld(MeldMessage message)
-        {
-            // broadcast to all players
-            Broadcast(message);
-            BroadcastScore(message.PlayerName, true);
-
-            NumMeld++;
-
-            // initiate next turn
-            if (NumMeld == Players.Count)
-            {
-                NumMeld = 0;
-                StartTurn(LastBidder);
-            }
-        }
-
-        private void StartTurn(int leader)
+        protected void StartTurn(int leader)
         {
             Leader = leader;
             CurPlayer = leader;
@@ -360,25 +211,18 @@ namespace PinochleServer
                 Broadcast(new TrickMessage(player.Name));
 
                 // update points
-                int winningPlayer = (Leader + TrickDecider.WinningCard(CurTrick, Trump)) % Players.Count;
+                int winningPlayer = (Leader + DoDecideTrick(CurTrick)) % Players.Count;
                 Players[winningPlayer].TookATrick = true;
-                foreach (Card c in CurTrick)
-                {
-                    if (TrickDecider.IsPoint(c))
-                    {
-                        Players[winningPlayer].SecretScore++;
-                    }
-                }
+                DoTrick(CurTrick, Players[winningPlayer]);
 
                 if (player.Cards.Count == 0)
                 {
-                    // point for last trick
-                    Players[winningPlayer].SecretScore++;
+                    DoLastTrick(winningPlayer);
 
                     // start new hand
                     UpdateAndBroadcastAllScores();
 
-                    if (Players.Any(p => p.Score >= 100))
+                    if (Players.Any(p => p.Score >= GetWinningPointTotal()))
                     {
                         Broadcast(new GameOverMessage(Players.OrderBy(p => p.Score).Last().Name));
                         HandleGameOver(this);
@@ -398,49 +242,120 @@ namespace PinochleServer
             else
             {
                 // initiate next turn
-                Card[] validCards = TrickDecider.ValidCards(player.Cards, CurTrick, Trump).ToArray();
-                Server.Instance().Send(new TurnMessage(player.Name, validCards), player.Uid);
+                Server.Instance().Send(new TurnMessage(player.Name, GetValidCards(player.Cards, CurTrick)), player.Uid);
             }
         }
 
-        private void NextPlayer()
+        protected void NextPlayer()
         {
             CurPlayer = (CurPlayer + 1) % Players.Count;
         }
 
-        private void Broadcast(Message message)
+        protected void Broadcast(Message message)
         {
             Server.Instance().Broadcast(message, Players.Select(p => p.Uid));
         }
 
         private void UpdateAndBroadcastAllScores()
         {
-            Player biddingPlayer = Players[LastBidder];
-            if (biddingPlayer.SecretScore + biddingPlayer.MeldScore < CurBid)
-            {
-                biddingPlayer.Score -= CurBid;
-                biddingPlayer.SecretScore = 0;
-                biddingPlayer.MeldScore = 0;
-            }
+            DoUpdateScores();
             foreach (Player p in Players)
             {
-                if (!p.TookATrick)
-                {
-                    p.MeldScore = 0;
-                }
-                p.Score += p.SecretScore;
-                p.Score += p.MeldScore;
-                p.SecretScore = 0;
-                p.MeldScore = 0;
                 p.TookATrick = false;
-                BroadcastScore(p.Name, false);
+                BroadcastScore(p.Name);
             }
         }
-
-        private void BroadcastScore(string playerName, bool includeMeld)
+            
+        protected void BroadcastScore(string playerName, bool includeMeld=false)
         {
             Player player = Players.Where(p => p.Name == playerName).Single();
             Broadcast(new ScoreMessage(playerName, includeMeld ? player.Score + player.MeldScore : player.Score));
+        }
+
+        protected int GetCurrentPlayerIndex()
+        {
+            return CurPlayer;
+        }
+
+        protected Player GetCurrentPlayer()
+        {
+            return Players[CurPlayer];
+        }
+
+        protected Player GetPlayer(int index)
+        {
+            return Players[index];
+        }
+
+        protected List<Player> GetPlayers()
+        {
+            return Players;
+        }
+
+        protected int GetNumPlayers()
+        {
+            return Players.Count;
+        }
+
+        protected virtual void DoStartRound(int curPlayer, int dealer)
+        {
+            StartTurn(curPlayer);
+        }
+
+        protected virtual int DoDecideTrick(List<Card> trick)
+        {
+            string suit = trick[0].Suit;
+            return trick.IndexOf(trick.Where(c => c.Suit == suit).OrderBy(c => c).Last());
+        }
+
+        protected virtual void DoTrick(List<Card> trick, Player winningPlayer)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void DoLastTrick(int winningPlayer)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void DoUpdateScores()
+        {
+
+        }
+
+        protected virtual Card[] GetValidCards(List<Card> hand, List<Card> trick)
+        {
+            return hand.ToArray();
+        }
+
+        protected virtual int GetWinningPointTotal()
+        {
+            return 100;
+        }
+
+        protected virtual void DealExtraCards(IEnumerable<Card> cards)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void HandleKitty(KittyMessage kittyMessage)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void HandleBid(BidMessage bidMessage)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void HandleTrump(TrumpMessage trumpMessage)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void HandleMeld(MeldMessage meldMessage)
+        {
+            // Do nothing by default
         }
     }
 }

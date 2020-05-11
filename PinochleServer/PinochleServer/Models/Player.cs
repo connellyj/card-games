@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace PinochleServer.Models
+namespace CardGameServer.Models
 {
-    class Player
+    public class Player
     {
         public string GameName;
         public string Name;

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace PinochleServer.Models
+namespace CardGameServer.Models
 {
     public class KittyMessage : Message
     {

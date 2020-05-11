@@ -1,8 +1,8 @@
-﻿using PinochleServer.Models;
+﻿using CardGameServer.Models;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PinochleServer
+namespace CardGameServer
 {
     public static class TrickDecider
     {

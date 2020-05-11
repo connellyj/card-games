@@ -1,8 +1,8 @@
-﻿using PinochleServer.Models;
+﻿using CardGameServer.Models;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PinochleServer
+namespace CardGameServer
 {
     public class MeldCounter
     {
@@ -17,12 +17,12 @@ namespace PinochleServer
 
         public int TotalMeld()
         {
-            int clubs = Trump == "C" ? ClubsMarriage() * GameManager.TRUMP_MARRIAGE : ClubsMarriage() * GameManager.MARRIAGE;
-            int diamonds = Trump == "D" ? DiamondsMarriage() * GameManager.TRUMP_MARRIAGE : DiamondsMarriage() * GameManager.MARRIAGE;
-            int spades = Trump == "S" ? SpadesMarriage() * GameManager.TRUMP_MARRIAGE : SpadesMarriage() * GameManager.MARRIAGE;
-            int hearts = Trump == "H" ? HeartsMarriage() * GameManager.TRUMP_MARRIAGE : HeartsMarriage() * GameManager.MARRIAGE;
+            int clubs = Trump == "C" ? ClubsMarriage() * PinochleGameManager.TRUMP_MARRIAGE : ClubsMarriage() * PinochleGameManager.MARRIAGE;
+            int diamonds = Trump == "D" ? DiamondsMarriage() * PinochleGameManager.TRUMP_MARRIAGE : DiamondsMarriage() * PinochleGameManager.MARRIAGE;
+            int spades = Trump == "S" ? SpadesMarriage() * PinochleGameManager.TRUMP_MARRIAGE : SpadesMarriage() * PinochleGameManager.MARRIAGE;
+            int hearts = Trump == "H" ? HeartsMarriage() * PinochleGameManager.TRUMP_MARRIAGE : HeartsMarriage() * PinochleGameManager.MARRIAGE;
             return AcesAround(true) + KingsAround(true) + QueensAround(true) + JacksAround(true) + Runs(true) + Pinochle(true) + 
-                (Nines() * GameManager.TRUMP_NINE) + clubs + diamonds + spades + hearts;
+                (Nines() * PinochleGameManager.TRUMP_NINE) + clubs + diamonds + spades + hearts;
         }
 
         public int Nines()
@@ -34,11 +34,11 @@ namespace PinochleServer
         {
             if (Cards.Where(c => c.Suit == Trump && c.Rank != "9").Count() == (Card.Ranks.Count * 2) - 2)
             {
-                return points ? GameManager.TRUMP_RUN * GameManager.DOUBLE_AROUND_MULTIPLIER : 2;
+                return points ? PinochleGameManager.TRUMP_RUN * PinochleGameManager.DOUBLE_AROUND_MULTIPLIER : 2;
             }
             else if (Cards.Where(c => c.Suit == Trump && c.Rank != "9").Distinct().Count() == Card.Ranks.Count - 1)
             {
-                return points ? GameManager.TRUMP_RUN : 1;
+                return points ? PinochleGameManager.TRUMP_RUN : 1;
             }
             else
             {
@@ -53,7 +53,7 @@ namespace PinochleServer
             int numPinochle = Pairs(numJacks, numQueens);
             if (points)
             {
-                return numPinochle == 2 ? GameManager.DOUBLE_PINOCHLE : (numPinochle == 1 ? GameManager.PINOCHLE : 0);
+                return numPinochle == 2 ? PinochleGameManager.DOUBLE_PINOCHLE : (numPinochle == 1 ? PinochleGameManager.PINOCHLE : 0);
             }
             else
             {
@@ -63,22 +63,22 @@ namespace PinochleServer
 
         public int AcesAround(bool points=false)
         {
-            return Around("A", points ? GameManager.ACES_AROUND : 0);
+            return Around("A", points ? PinochleGameManager.ACES_AROUND : 0);
         }
 
         public int KingsAround(bool points = false)
         {
-            return Around("K", points ? GameManager.KINGS_AROUND : 0);
+            return Around("K", points ? PinochleGameManager.KINGS_AROUND : 0);
         }
 
         public int QueensAround(bool points = false)
         {
-            return Around("Q", points ? GameManager.QUEENS_AROUND : 0);
+            return Around("Q", points ? PinochleGameManager.QUEENS_AROUND : 0);
         }
 
         public int JacksAround(bool points = false)
         {
-            return Around("J", points ? GameManager.JACKS_AROUND : 0);
+            return Around("J", points ? PinochleGameManager.JACKS_AROUND : 0);
         }
 
         public int ClubsMarriage()
@@ -105,7 +105,7 @@ namespace PinochleServer
         {
             if (Cards.Where(c => c.Rank == rank).Count() == Card.Suits.Count * 2)
             {
-                return points == 0 ? 2 : GameManager.DOUBLE_AROUND_MULTIPLIER * points;
+                return points == 0 ? 2 : PinochleGameManager.DOUBLE_AROUND_MULTIPLIER * points;
             }
             else if (Cards.Where(c => c.Rank == rank).Distinct().Count() == Card.Suits.Count)
             {

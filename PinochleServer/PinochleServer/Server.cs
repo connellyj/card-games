@@ -1,12 +1,12 @@
 ﻿using Newtonsoft.Json;
-using PinochleServer.Models;
+using CardGameServer.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
-namespace PinochleServer
+namespace CardGameServer
 {
     class Server
     {

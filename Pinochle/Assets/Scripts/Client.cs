@@ -30,7 +30,7 @@ public class Client : MonoBehaviour
         PlayerOrderMap = new Dictionary<int, string>();
         StartInitialized = false;
 
-        Ws = new WebSocket("ws://18.217.141.221:2000");
+        Ws = new WebSocket("ws://localhost:2000");
         Ws.Connect();
 
         Ws.OnOpen += (sender, e) =>

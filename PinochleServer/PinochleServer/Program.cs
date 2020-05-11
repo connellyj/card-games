@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PinochleServer
+namespace CardGameServer
 {
     class Program
     {

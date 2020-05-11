@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PinochleServer.Models
+namespace CardGameServer.Models
 {
     public class Card : IComparable<Card>, IEquatable<Card>
     {
