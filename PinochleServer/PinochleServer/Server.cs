@@ -17,7 +17,7 @@ namespace PinochleServer
 
         private Server()
         {
-            SocketServer = new WebSocketServer("ws://ec2-18-217-141-221.us-east-2.compute.amazonaws.com");
+            SocketServer = new WebSocketServer(2000);
             SocketServer.AddWebSocketService<Router>("/");
             GameManager.Init();
         }
