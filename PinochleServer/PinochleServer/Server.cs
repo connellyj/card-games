@@ -3,7 +3,6 @@ using PinochleServer.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
@@ -17,7 +16,7 @@ namespace PinochleServer
 
         private Server()
         {
-            SocketServer = new WebSocketServer("ws://ec2-18-217-141-221.us-east-2.compute.amazonaws.com:2000");
+            SocketServer = new WebSocketServer(2000);
             SocketServer.AddWebSocketService<Router>("/");
             GameManager.Init();
         }
