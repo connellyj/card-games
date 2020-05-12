@@ -38,7 +38,7 @@ namespace CardGameServer
         public void Start()
         {
             SocketServer.Start();
-            Console.ReadKey(true);  // keeps program active forever
+            Console.ReadKey(true);  // keeps program active
         }
 
         public void Broadcast<Model>(Model message)
@@ -70,14 +70,18 @@ namespace CardGameServer
 
             protected override void OnOpen()
             {
-                foreach (Message m in GameManager.HandleNewConnection())
-                {
-                    Send(JsonConvert.SerializeObject(m));
-                }
+                Send(JsonConvert.SerializeObject(GameManager.GetGameTypes()));
             }
 
             private void HandleMessage(string message)
             {
+                GameTypeMessage gameTypeMessage = JsonConvert.DeserializeObject<GameTypeMessage>(message);
+                if (gameTypeMessage.IsValid())
+                {
+                    GameManager.HandleGameTypes(ID, gameTypeMessage);
+                    return;
+                }
+
                 JoinMessage joinMessage = JsonConvert.DeserializeObject<JoinMessage>(message);
                 if (joinMessage.IsValid())
                 {

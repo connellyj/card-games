@@ -1,4 +1,5 @@
 ﻿using CardGameServer.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,17 +7,27 @@ namespace CardGameServer
 {
     public abstract class GameManager
     {
-        public static readonly int MIN_PLAYERS = 3; // TODO move to protected method
-        public static readonly int NUM_CARDS = 15;
-
         private readonly List<Player> Players;
         private List<Card> CurTrick;
         private int Dealer;
         private int Leader;
         private int CurPlayer;
 
-        private static Dictionary<string, GameManager> GameMap;
-        private static Dictionary<string, string> PlayerMap;
+        private static Dictionary<string, Dictionary<string, GameManager>> GameNameMap;
+        private static Dictionary<string, string> PlayerGameNameMap;
+        private static Dictionary<string, string> PlayerGameTypeMap;
+
+        private static readonly Dictionary<string, Type> GameManagerMap = new Dictionary<string, Type>()
+        {
+            { "Hearts", typeof(HeartsGameManager) },
+            { "Pinochle", typeof(PinochleGameManager) }
+        };
+
+        private static readonly Dictionary<string, int> MinPlayerMap = new Dictionary<string, int>()
+        {
+            { "Hearts", HeartsGameManager.MinPlayers() },
+            { "Pinochle", PinochleGameManager.MinPlayers() }
+        };
 
         public GameManager()
         {
@@ -27,30 +38,42 @@ namespace CardGameServer
 
         public static void Init()
         {
-            GameMap = new Dictionary<string, GameManager>();
-            PlayerMap = new Dictionary<string, string>();
+            GameNameMap = new Dictionary<string, Dictionary<string, GameManager>>
+            {
+                { "Hearts", new Dictionary<string, GameManager>() },
+                { "Pinochle", new Dictionary<string, GameManager>() }
+            };
+            PlayerGameNameMap = new Dictionary<string, string>();
+            PlayerGameTypeMap = new Dictionary<string, string>();
         }
 
-        public static List<Message> HandleNewConnection()
+        public static GameTypeMessage GetGameTypes()
         {
-            return new List<Message>() {
-                new AvailableGamesMessage(GameMap.Keys.ToArray()),
-                new GameInfoMessage(MIN_PLAYERS)
-            };
+            return new GameTypeMessage(GameManagerMap.Select(kvp => kvp.Key).ToArray());
+        }
+
+        public static void HandleGameTypes(string uid, GameTypeMessage gameTypeMessage)
+        {
+            PlayerGameTypeMap.Add(uid, gameTypeMessage.ChosenGame);
+            Server.Instance().Send(new AvailableGamesMessage(GameNameMap[PlayerGameTypeMap[uid]].Keys.ToArray()), uid);
+            Server.Instance().Send(new GameInfoMessage(MinPlayerMap[PlayerGameTypeMap[uid]]), uid);
         }
 
         public static void HandleJoin(JoinMessage message, string uid, string messageHash)
         {
-            if (GameMap.ContainsKey(message.GameName))
+            if (PlayerGameTypeMap.ContainsKey(uid))
             {
-                GameMap[message.GameName].Join(message, uid, messageHash);
-            }
-            else
-            {
-                GameManager gm = new PinochleGameManager();
-                GameMap.Add(message.GameName, gm);
-                Server.Instance().Broadcast(new AvailableGamesMessage(GameMap.Keys.ToArray()));
-                gm.Join(message, uid, messageHash);
+                if (GameNameMap[PlayerGameTypeMap[uid]].ContainsKey(message.GameName))
+                {
+                    GameNameMap[PlayerGameTypeMap[uid]][message.GameName].Join(message, uid, messageHash);
+                }
+                else
+                {
+                    GameManager gm = (GameManager)Activator.CreateInstance(GameManagerMap[PlayerGameTypeMap[uid]]);
+                    GameNameMap[PlayerGameTypeMap[uid]].Add(message.GameName, gm);
+                    Server.Instance().Broadcast(new AvailableGamesMessage(GameNameMap.Keys.ToArray()));
+                    gm.Join(message, uid, messageHash);
+                }
             }
         }
 
@@ -101,19 +124,21 @@ namespace CardGameServer
 
         private static void HandleGameOver(GameManager gm)
         {
-            string gameName = GameMap.Where(kvp => kvp.Value == gm).Select(kvp => kvp.Key).Single();
-            GameMap.Remove(gameName);
-            foreach (string p in PlayerMap.Where(kvp => kvp.Value == gameName).Select(kvp => kvp.Key).ToList())
+            string gameType = GameManagerMap.Where(kvp => kvp.Value == gm.GetType()).Select(kvp => kvp.Key).Single();
+            string gameName = GameNameMap[gameType].Where(kvp => kvp.Value == gm).Select(kvp => kvp.Key).Single();
+            GameNameMap.Remove(gameName);
+            foreach (string p in PlayerGameNameMap.Where(kvp => kvp.Value == gameName).Select(kvp => kvp.Key).ToList())
             {
-                PlayerMap.Remove(p);
+                PlayerGameNameMap.Remove(p);
+                PlayerGameTypeMap.Remove(p);
             }
         }
 
         private static GameManager GetGameManager(string playerId)
         {
-            if (PlayerMap.ContainsKey(playerId) && GameMap.ContainsKey(PlayerMap[playerId]))
+            if (PlayerGameNameMap.ContainsKey(playerId) && GameNameMap.ContainsKey(PlayerGameNameMap[playerId]))
             {
-                return GameMap[PlayerMap[playerId]];
+                return GameNameMap[PlayerGameTypeMap[playerId]][PlayerGameNameMap[playerId]];
             }
             else
             {
@@ -126,7 +151,7 @@ namespace CardGameServer
             if (!Players.Any(p => p.Name == message.UserName))
             {
                 // handle full game
-                if (Players.Count == MIN_PLAYERS)
+                if (Players.Count == GetMinPlayers())
                 {
                     Server.Instance().Send(new Response(false, messageHash, string.Format("The game '{0}' is full", message.GameName)), uid);
                     return;
@@ -144,14 +169,14 @@ namespace CardGameServer
                 // create new player model
                 Player player = new Player(message.GameName, message.UserName, uid, Players.Count);
                 Players.Add(player);
-                PlayerMap.Add(uid, message.GameName);
+                PlayerGameNameMap.Add(uid, message.GameName);
                 message.Order = player.Order;
 
                 // broadcast to all players
                 Broadcast(message);
 
                 // there are enough players, so start the game
-                if (Players.Count == MIN_PLAYERS)
+                if (Players.Count == GetMinPlayers())
                 {
                     StartRound();
                 }
@@ -176,13 +201,13 @@ namespace CardGameServer
             int idx = 0;
             foreach (Player p in Players)
             {
-                p.Cards = deck.Skip(idx * NUM_CARDS).Take(NUM_CARDS).ToList();
+                p.Cards = deck.Skip(idx * GetNumCardsInHand()).Take(GetNumCardsInHand()).ToList();
                 idx++;
                 Server.Instance().Send(new StartMessage(p.Cards.ToArray()), p.Uid);
             }
-            if (deck.Length > idx * NUM_CARDS)
+            if (deck.Length > idx * GetNumCardsInHand())
             {
-                DealExtraCards(deck.Skip(idx * NUM_CARDS));
+                DealExtraCards(deck.Skip(idx * GetNumCardsInHand()));
             }
         }
 
@@ -320,7 +345,11 @@ namespace CardGameServer
 
         protected virtual void DoUpdateScores()
         {
-
+            foreach (Player p in GetPlayers())
+            {
+                p.Score += p.SecretScore;
+                p.SecretScore = 0;
+            }
         }
 
         protected virtual Card[] GetValidCards(List<Card> hand, List<Card> trick)
@@ -331,6 +360,16 @@ namespace CardGameServer
         protected virtual int GetWinningPointTotal()
         {
             return 100;
+        }
+
+        protected virtual int GetMinPlayers()
+        {
+            return 4;
+        }
+
+        protected virtual int GetNumCardsInHand()
+        {
+            return 13;
         }
 
         protected virtual void DealExtraCards(IEnumerable<Card> cards)

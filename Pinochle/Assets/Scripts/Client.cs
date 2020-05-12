@@ -61,6 +61,11 @@ public class Client : MonoBehaviour
         Ws.Close();
     }
 
+    public void SubmitGameType(string gameType)
+    {
+        MessageServer(new GameTypeMessage(game: gameType));
+    }
+
     public Response SubmitJoinGame(string userName, string gameName=null)
     {
         Response response = MessageAndWait(new JoinMessage(userName, gameName));
@@ -112,7 +117,14 @@ public class Client : MonoBehaviour
                 return;
             }
 
-            AvailableGamesMessage gamesMessage = JsonConvert.DeserializeObject<AvailableGamesMessage>(message);
+            GameTypeMessage gameTypeMessage = JsonConvert.DeserializeObject<GameTypeMessage>(message);
+            if (gameTypeMessage.IsValid())
+            {
+                ViewController.Instance.UpdateGameTypes(gameTypeMessage.GameTypes);
+                return;
+            }
+
+                AvailableGamesMessage gamesMessage = JsonConvert.DeserializeObject<AvailableGamesMessage>(message);
             if (gamesMessage.IsValid())
             {
                 ViewController.Instance.UpdateAvailableGames(gamesMessage.AvailableGames);

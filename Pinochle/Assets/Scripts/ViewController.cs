@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class ViewController : MonoBehaviour
 {
+    public GameTypeView GameTypePopUp;
     public JoinView JoinPopUp;
     public GameLogView GameLog;
     public GameView GameTable;
@@ -54,6 +55,11 @@ public class ViewController : MonoBehaviour
             WinningPlayerText.text = WinningPlayer;
             GameOverScreen.SetActive(GameOverEnabled);
         }
+    }
+
+    public void UpdateGameTypes(string[] gameTypes)
+    {
+        GameTypePopUp.Init(gameTypes);
     }
 
     public void UpdateAvailableGames(string[] games)

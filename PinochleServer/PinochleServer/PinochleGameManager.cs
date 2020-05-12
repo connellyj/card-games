@@ -35,6 +35,11 @@ namespace CardGameServer
             NumMeld = 0;
         }
 
+        public static int MinPlayers()
+        {
+            return 3;
+        }
+
         protected override void DoStartRound(int curPlayer, int dealer)
         {
             StartBid(GetPlayer(curPlayer), dealer);
@@ -88,6 +93,21 @@ namespace CardGameServer
         protected override Card[] GetValidCards(List<Card> hand, List<Card> trick)
         {
             return TrickDecider.ValidCards(hand, trick, Trump).ToArray();
+        }
+
+        protected override int GetWinningPointTotal()
+        {
+            return 100;
+        }
+
+        protected override int GetMinPlayers()
+        {
+            return MinPlayers();
+        }
+
+        protected override int GetNumCardsInHand()
+        {
+            return 15;
         }
 
         protected override void DealExtraCards(IEnumerable<Card> cards)
