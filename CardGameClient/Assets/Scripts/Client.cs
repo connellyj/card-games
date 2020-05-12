@@ -52,6 +52,7 @@ public class Client : MonoBehaviour
         {
             string message = e.Data;
             Debug.Log("Server: " + message);
+            ViewController.Instance.UpdateLog("Server", message);
             HandleMessage(message);
         };
     }
@@ -99,6 +100,11 @@ public class Client : MonoBehaviour
     {
         ViewController.Instance.ShowMeldWindow(false);
         MessageServer(message);
+    }
+
+    public void SubmitPass(Card[] passedCards)
+    {
+        MessageServer(new PassMessage(PlayerName, cards: passedCards));
     }
 
     public void SubmitTurn(Card card)
@@ -187,6 +193,13 @@ public class Client : MonoBehaviour
                 return;
             }
 
+            PassMessage passMessage = JsonConvert.DeserializeObject<PassMessage>(message);
+            if (passMessage.IsValid())
+            {
+                HandlePass(passMessage);
+                return;
+            }
+
             ScoreMessage scoreMessage = JsonConvert.DeserializeObject<ScoreMessage>(message);
             if (scoreMessage.IsValid())
             {
@@ -219,6 +232,8 @@ public class Client : MonoBehaviour
         {
             Debug.Log("OnMessage error: " + err.Message);
             Debug.Log("OnMessage stack trace: " + err.StackTrace);
+            ViewController.Instance.UpdateLog("OnMessage error", err.Message);
+            ViewController.Instance.UpdateLog("OnMessage stack trace", err.StackTrace);
         }
     }
 
@@ -252,12 +267,15 @@ public class Client : MonoBehaviour
         }
 
         // Display cards and meld sheet
+        ViewController.Instance.ClearInfo();
         ViewController.Instance.ShowCardsInHand(message.Cards.ToList());
     }
 
     private void HandleBid(BidMessage bidMessage)
     {
+        // Wait until previous round is cleared
         ViewController.Instance.WaitForCardsCleared();
+
         if (bidMessage.Bid < 0)
         {
             ViewController.Instance.ShowBidWindow(true, bidMessage.CurBid);
@@ -317,9 +335,36 @@ public class Client : MonoBehaviour
         }
     }
 
+    private void HandlePass(PassMessage passMessage)
+    {
+        // Wait until previous round is cleared
+        ViewController.Instance.WaitForCardsCleared();
+
+        if (passMessage.PassingPlayer == passMessage.PassingTo)
+        {
+            // no pass
+            ViewController.Instance.UpdatePassingInfo("No pass");
+            SubmitPass(new Card[0]);
+        }
+        else
+        {
+            if (passMessage.PassedCards == null)
+            {
+                ViewController.Instance.UpdatePassingInfo(passMessage.PassingTo);
+                ViewController.Instance.EnablePass(passMessage.NumToPass);
+            }
+            else
+            {
+                ViewController.Instance.AddCardsInHand(passMessage.PassedCards.ToList());
+            }
+        }
+    }
+
     private void HandleTurn(TurnMessage turnMessage)
     {
+        // Wait until previous round is cleared
         ViewController.Instance.WaitForCardsCleared();
+
         if (turnMessage.Card == null)
         {
             ViewController.Instance.EnablePlayCard(turnMessage.ValidCards);

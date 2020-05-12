@@ -44,9 +44,9 @@ namespace CardGameServer
             return 3;
         }
 
-        protected override void DoStartRound(int curPlayer, int dealer)
+        protected override void DoStartRound(int dealer)
         {
-            StartBid(GetPlayer(curPlayer), dealer);
+            StartBid(GetCurrentPlayer(), dealer);
             SendMeldPoints();
         }
 
@@ -94,7 +94,7 @@ namespace CardGameServer
             }
         }
 
-        protected override Card[] GetValidCards(List<Card> hand, List<Card> trick)
+        protected override Card[] GetValidCards(List<Card> hand, List<Card> trick, bool isFirstTrick)
         {
             return TrickDecider.ValidCards(hand, trick, Trump).ToArray();
         }

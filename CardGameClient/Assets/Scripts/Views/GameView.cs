@@ -28,9 +28,11 @@ public class GameView : MonoBehaviour
     public Button ClearButton;
     public Button PlayButton;
     public Button DiscardButton;
+    public Button PassButton;
     private bool ClearEnabled;
     private bool PlayEnabled;
     private bool DiscardEnabled;
+    private bool PassEnabled;
 
     // Main thread helper variables
     private List<Card> CardsInHand;
@@ -48,7 +50,6 @@ public class GameView : MonoBehaviour
     private List<CardView> SelectableCards;
     private int NumSelectable;
     private bool Selectable;
-    private bool CardsInHandReady;
     private bool StartDone = false;  // set here to ensure false before object made active
 
     // Card display details
@@ -84,7 +85,8 @@ public class GameView : MonoBehaviour
 
         // set up buttons
         ResetButtonsAndSelections();
-        DiscardButton.onClick.AddListener(() => {
+        DiscardButton.onClick.AddListener(() => 
+        {
             IEnumerable<Card> discards = GetSelectedCards();
             RemoveCards(discards);
             Client.Instance.SubmitDiscardKitty(discards);
@@ -94,8 +96,18 @@ public class GameView : MonoBehaviour
             }
         });
         DiscardButton.onClick.AddListener(ResetButtonsAndSelections);
+
         PlayButton.onClick.AddListener(() => { Client.Instance.SubmitTurn(GetSelectedCards().Single()); });
         PlayButton.onClick.AddListener(ResetButtonsAndSelections);
+
+        PassButton.onClick.AddListener(() =>
+        {
+            IEnumerable<Card> discards = GetSelectedCards();
+            RemoveCards(discards);
+            Client.Instance.SubmitPass(discards.ToArray());
+        });
+        PassButton.onClick.AddListener(ResetButtonsAndSelections);
+
         ClearButton.onClick.AddListener(ClearPlayedCards);
 
         // trigger start done
@@ -159,6 +171,10 @@ public class GameView : MonoBehaviour
         {
             PlayButton.gameObject.SetActive(PlayEnabled);
         }
+        if (PassEnabled != PassButton.gameObject.activeInHierarchy)
+        {
+            PassButton.gameObject.SetActive(PassEnabled);
+        }
         if (ClearEnabled != ClearButton.gameObject.activeInHierarchy)
         {
             ClearButton.gameObject.SetActive(ClearEnabled);
@@ -177,6 +193,8 @@ public class GameView : MonoBehaviour
 
     public void ShowPlayerNames(Dictionary<int, string> orderNameMap, int thisPlayerKey)
     {
+        WaitForInitialization();
+
         Queue<string> queue = new Queue<string>();
         for (int i = 0; i < orderNameMap.Count; i++)
         {
@@ -191,29 +209,39 @@ public class GameView : MonoBehaviour
 
     public void ShowCards(List<Card> cards)
     {
+        WaitForInitialization();
+
         lock (CardsInHand)
         {
             CardsInHand = cards.OrderBy(c => c).ToList();
         }
     }
 
+    public void AddCards(List<Card> cards)
+    {
+        WaitForInitialization();
+
+        lock (CardsInHand)
+        {
+            CardsInHand = cards;
+            CardsInHand.AddRange(CardViewMap.Values);
+        }
+    }
+
     public void ShowKittyCards(IEnumerable<Card> kitty)
     {
+        WaitForInitialization();
+
         lock (KittyCards)
         {
             KittyCards = kitty.OrderBy(c => c).ToList();
         }
     }
 
-    public void HandleDiscardKitty(int numCards)
-    {
-        WaitForKittyCreated();
-        DiscardEnabled = true;
-        EnableSelect(numCards, CardViewMap.Keys.ToList());
-    }
-
     public void ShowPlayedCard(Card card, string player, bool destroyExisting)
     {
+        WaitForInitialization();
+
         Vector2 location2D = PlayerNameTexts
             .Zip(PlayedCardLocations, (t, l) => new { t, l })
             .Where(a => a.t.text == player)
@@ -233,7 +261,9 @@ public class GameView : MonoBehaviour
 
     public void EnableTurn(Card[] validCards)
     {
+        WaitForInitialization();
         WaitForHandCreated();
+
         lock (CardViewMap)
         {
             lock (PlayedViews)
@@ -247,9 +277,29 @@ public class GameView : MonoBehaviour
         PlayEnabled = true;
     }
 
+    public void EnablePass(int numCards)
+    {
+        WaitForInitialization();
+        WaitForHandCreated();
+
+        PassEnabled = true;
+        EnableSelect(numCards, CardViewMap.Keys.ToList());
+    }
+
+    public void EnableDiscardKitty(int numCards)
+    {
+        WaitForInitialization();
+        WaitForKittyCreated();
+
+        DiscardEnabled = true;
+        EnableSelect(numCards, CardViewMap.Keys.ToList());
+    }
+
     public void EnableClearKitty()
     {
+        WaitForInitialization();
         WaitForKittyCreated();
+
         lock (CardViewMap)
         {
             foreach (CardView cv in PlayedViews)
@@ -265,20 +315,20 @@ public class GameView : MonoBehaviour
         ClearEnabled = true;
     }
 
-    public void WaitForInitialization()
+    public void WaitForCardsCleared()
     {
         Monitor.Enter(this);
-        while (!StartDone)
+        while (ClearEnabled)
         {
             Monitor.Wait(this);
         }
         Monitor.Exit(this);
     }
 
-    public void WaitForCardsCleared()
+    private void WaitForInitialization()
     {
         Monitor.Enter(this);
-        while (ClearEnabled)
+        while (!StartDone)
         {
             Monitor.Wait(this);
         }
@@ -298,7 +348,7 @@ public class GameView : MonoBehaviour
     private void WaitForHandCreated()
     {
         Monitor.Enter(CardsInHand);
-        while (!CardsInHandReady)
+        while (CardsInHand.Count > 0)
         {
             Monitor.Wait(CardsInHand);
         }
@@ -338,7 +388,6 @@ public class GameView : MonoBehaviour
             CreateAndRegisterCardView(card, location);
             location.x += CardSpacing;
         }
-        CardsInHandReady = true;
         Monitor.PulseAll(CardsInHand);
         Monitor.Exit(CardsInHand);
     }
@@ -440,23 +489,20 @@ public class GameView : MonoBehaviour
                 {
                     if (SelectedCards.Contains(cardView))
                     {
-                        PlayButton.interactable = false;
-                        DiscardButton.interactable = false;
+                        SetInteractable(false);
                         SelectedCards.Remove(cardView);
                         cardView.Select(false);
                     }
                     else if (SelectedCards.Count < NumSelectable)
                     {
-                        PlayButton.interactable = false;
-                        DiscardButton.interactable = false;
+                        SetInteractable(false);
                         SelectedCards.Add(cardView);
                         cardView.Select(true);
                     }
 
                     if (SelectedCards.Count == NumSelectable)
                     {
-                        PlayButton.interactable = true;
-                        DiscardButton.interactable = true;
+                        SetInteractable(true);
                     }
                 }
             }
@@ -498,15 +544,20 @@ public class GameView : MonoBehaviour
         }
     }
 
+    private void SetInteractable(bool interactable)
+    {
+        PlayButton.interactable = interactable;
+        DiscardButton.interactable = interactable;
+        PassButton.interactable = interactable;
+    }
+
     private void ResetButtonsAndSelections()
     {
-        CardsInHandReady = false;
-
         // buttons
-        DiscardButton.interactable = false;
-        PlayButton.interactable = false;
+        SetInteractable(false);
         DiscardEnabled = false;
         PlayEnabled = false;
+        PassEnabled = false;
 
         // unhighlight cards
         HighlightSelectableCards(false);

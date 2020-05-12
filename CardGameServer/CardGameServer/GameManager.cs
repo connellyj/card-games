@@ -116,6 +116,15 @@ namespace CardGameServer
             }
         }
 
+        public static void HandlePass(string playerId, PassMessage message)
+        {
+            GameManager gm = GetGameManager(playerId);
+            if (gm != null)
+            {
+                gm.HandlePass(message);
+            }
+        }
+
         public static void HandleTurn(string playerId, TurnMessage message)
         {
             GameManager gm = GetGameManager(playerId);
@@ -194,8 +203,8 @@ namespace CardGameServer
         private void StartRound()
         {
             Deal();
-            CurPlayer = (Dealer + 1) % Players.Count;
-            DoStartRound(CurPlayer, Dealer);
+            CurPlayer = DoSetStartingPlayer();
+            DoStartRound(Dealer);
         }
 
         private void Deal()
@@ -214,13 +223,14 @@ namespace CardGameServer
             }
         }
 
-        protected void StartTurn(int leader)
+        protected void StartTurn(int leader, bool isFirstRound=false)
         {
             Leader = leader;
             CurPlayer = leader;
             Player player = Players[CurPlayer];
             CurTrick = new List<Card>();
-            Server.Instance().Send(new TurnMessage(player.Name, player.Cards.ToArray()), player.Uid);
+            Card[] validCards = isFirstRound ? GetFirstRoundValidCards(player.Cards) : player.Cards.ToArray();
+            Server.Instance().Send(new TurnMessage(player.Name, validCards), player.Uid);
         }
 
         private void HandleTurn(TurnMessage message)
@@ -270,7 +280,8 @@ namespace CardGameServer
             else
             {
                 // initiate next turn
-                Server.Instance().Send(new TurnMessage(player.Name, GetValidCards(player.Cards, CurTrick)), player.Uid);
+                bool isFirst = !Players.Any(p => p.TookATrick);
+                Server.Instance().Send(new TurnMessage(player.Name, GetValidCards(player.Cards, CurTrick, isFirst)), player.Uid);
             }
         }
 
@@ -325,9 +336,14 @@ namespace CardGameServer
             return Players.Count;
         }
 
-        protected virtual void DoStartRound(int curPlayer, int dealer)
+        protected virtual int DoSetStartingPlayer()
         {
-            StartTurn(curPlayer);
+            return (Dealer + 1) % Players.Count;
+        }
+
+        protected virtual void DoStartRound(int dealer)
+        {
+            StartTurn(CurPlayer, true);
         }
 
         protected virtual int DoDecideTrick(List<Card> trick)
@@ -355,7 +371,12 @@ namespace CardGameServer
             }
         }
 
-        protected virtual Card[] GetValidCards(List<Card> hand, List<Card> trick)
+        protected virtual Card[] GetFirstRoundValidCards(List<Card> hand)
+        {
+            return hand.ToArray();
+        }
+
+        protected virtual Card[] GetValidCards(List<Card> hand, List<Card> trick, bool isFirstTrick)
         {
             string suit = trick[0].Suit;
             Card[] followSuit = hand.Where(c => c.Suit == suit).ToArray();
@@ -412,6 +433,11 @@ namespace CardGameServer
         }
 
         protected virtual void HandleMeld(MeldMessage meldMessage)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void HandlePass(PassMessage passMessage)
         {
             // Do nothing by default
         }

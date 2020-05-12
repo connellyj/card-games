@@ -74,13 +74,23 @@ public class ViewController : MonoBehaviour
 
     public void UpdateBidInfo(string bidder, string bid)
     {
-        GameLog.SetBidder(bidder);
-        GameLog.SetBid(bid);
+        GameLog.SetInfo("Bidder", bidder, 0);
+        GameLog.SetInfo("Bid", bid, 1);
     }
 
     public void UpdateTrumpInfo(string trump)
     {
-        GameLog.SetTrump(trump);
+        GameLog.SetInfo("Trump", trump, 2);
+    }
+
+    public void UpdatePassingInfo(string passingTo)
+    {
+        GameLog.SetInfo("Passing to", passingTo, 0);
+    }
+
+    public void ClearInfo()
+    {
+        GameLog.ClearInfo();
     }
 
     public void UpdateScoreInfo(string playerName, int score)
@@ -132,10 +142,6 @@ public class ViewController : MonoBehaviour
 
     public void UpdateNames(Dictionary<int, string> playerOrderToNameMap, string thisPlayerName)
     {
-        // Wait for the view to initalize
-        GameTable.WaitForInitialization();
-
-        // Fill in names on table and log
         int playerOrder = playerOrderToNameMap.Where(kvp => kvp.Value == thisPlayerName).Select(kvp => kvp.Key).Single();
         GameTable.ShowPlayerNames(playerOrderToNameMap, playerOrder);
         GameLog.SetNames(playerOrderToNameMap);
@@ -144,6 +150,11 @@ public class ViewController : MonoBehaviour
     public void ShowCardsInHand(List<Card> cards)
     {
         GameTable.ShowCards(cards);
+    }
+
+    public void AddCardsInHand(List<Card> cards)
+    {
+        GameTable.AddCards(cards);
     }
 
     public void ShowCardsInKitty(Card[] cards)
@@ -156,9 +167,14 @@ public class ViewController : MonoBehaviour
         GameTable.ShowPlayedCard(card, playerName, isThisPlayer);
     }
 
+    public void EnablePass(int numCards)
+    {
+        GameTable.EnablePass(numCards);
+    }
+
     public void EnableDiscardCardsInKitty(int numCards)
     {
-        GameTable.HandleDiscardKitty(numCards);
+        GameTable.EnableDiscardKitty(numCards);
     }
 
     public void EnableClearCardsInKitty()

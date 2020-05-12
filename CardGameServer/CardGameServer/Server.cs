@@ -117,7 +117,14 @@ namespace CardGameServer
                     return;
                 }
 
-                TurnMessage turnMessage = JsonConvert.DeserializeObject<TurnMessage>(message);
+                PassMessage passMessage = JsonConvert.DeserializeObject<PassMessage>(message);
+                if (passMessage.IsValid())
+                {
+                    GameManager.HandlePass(ID, passMessage);
+                    return;
+                }
+
+                    TurnMessage turnMessage = JsonConvert.DeserializeObject<TurnMessage>(message);
                 if (turnMessage.IsValid())
                 {
                     GameManager.HandleTurn(ID, turnMessage);
