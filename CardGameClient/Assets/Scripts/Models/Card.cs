@@ -1,18 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 
 public class Card : IComparable<Card>, IEquatable<Card>
 {
     public string Suit;
     public string Rank;
+    public int SortKey;
 
-    public static readonly List<string> Suits = new List<string>() { "C", "D", "S", "H" };
-    public static readonly List<string> Ranks = new List<string>() { "9", "J", "Q", "K", "10", "A" };
-
-    public Card(string suit, string rank)
+    public Card(string suit, string rank, int sortKey)
     {
         Suit = suit;
         Rank = rank;
+        SortKey = sortKey;
     }
 
     public int CompareTo(Card card)
@@ -25,9 +23,9 @@ public class Card : IComparable<Card>, IEquatable<Card>
         return Rank + "/" + Suit;
     }
 
-    public int GetSortValue()
+    public virtual int GetSortValue()
     {
-        return (Suits.IndexOf(Suit) * 100) + Ranks.IndexOf(Rank);
+        return SortKey;
     }
 
     public bool Equals(Card other)

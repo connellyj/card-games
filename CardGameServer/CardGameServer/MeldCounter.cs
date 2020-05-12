@@ -32,11 +32,11 @@ namespace CardGameServer
 
         public int Runs(bool points=false)
         {
-            if (Cards.Where(c => c.Suit == Trump && c.Rank != "9").Count() == (Card.Ranks.Count * 2) - 2)
+            if (Cards.Where(c => c.Suit == Trump && c.Rank != "9").Count() == (PinochleGameManager.NUM_RANKS * 2) - 2)
             {
                 return points ? PinochleGameManager.TRUMP_RUN * PinochleGameManager.DOUBLE_AROUND_MULTIPLIER : 2;
             }
-            else if (Cards.Where(c => c.Suit == Trump && c.Rank != "9").Distinct().Count() == Card.Ranks.Count - 1)
+            else if (Cards.Where(c => c.Suit == Trump && c.Rank != "9").Distinct().Count() == PinochleGameManager.NUM_RANKS - 1)
             {
                 return points ? PinochleGameManager.TRUMP_RUN : 1;
             }
@@ -103,11 +103,11 @@ namespace CardGameServer
 
         private int Around(string rank, int points)
         {
-            if (Cards.Where(c => c.Rank == rank).Count() == Card.Suits.Count * 2)
+            if (Cards.Where(c => c.Rank == rank).Count() == PinochleGameManager.NUM_SUITS * 2)
             {
                 return points == 0 ? 2 : PinochleGameManager.DOUBLE_AROUND_MULTIPLIER * points;
             }
-            else if (Cards.Where(c => c.Rank == rank).Distinct().Count() == Card.Suits.Count)
+            else if (Cards.Where(c => c.Rank == rank).Distinct().Count() == PinochleGameManager.NUM_SUITS)
             {
                 return points == 0 ? 1 : points;
             }

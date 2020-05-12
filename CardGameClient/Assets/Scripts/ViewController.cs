@@ -137,17 +137,7 @@ public class ViewController : MonoBehaviour
 
         // Fill in names on table and log
         int playerOrder = playerOrderToNameMap.Where(kvp => kvp.Value == thisPlayerName).Select(kvp => kvp.Key).Single();
-        foreach (int i in playerOrderToNameMap.Keys)
-        {
-            if (i != playerOrder)
-            {
-                GameTable.ShowPlayerName(playerOrder - i == 1 || playerOrder - i == -1 * (playerOrderToNameMap.Count - 1), playerOrderToNameMap[i]);
-            }
-            else
-            {
-                GameTable.ShowPlayerName(playerOrderToNameMap[i]);
-            }
-        }
+        GameTable.ShowPlayerNames(playerOrderToNameMap, playerOrder);
         GameLog.SetNames(playerOrderToNameMap);
     }
 

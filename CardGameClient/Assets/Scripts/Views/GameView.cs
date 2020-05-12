@@ -8,20 +8,14 @@ using UnityEngine.UI;
 public class GameView : MonoBehaviour
 {
     // Player names
-    public TextMeshProUGUI SouthName;
-    public TextMeshProUGUI EastName;
-    public TextMeshProUGUI WestName;
-    private string PlayerName;
-    private string EastPlayerName;
-    private string WestPlayerName;
+    public TextMeshProUGUI[] PlayerNameTexts;
+    private string[] PlayerNames;
 
     // Card insantiation
     public GameObject CardPrefab;
     public Vector2 FirstCardLocation;
     public Vector2 FirstKittyCardLocation;
-    public Vector2 SouthCardLocation;
-    public Vector2 WestCardLocation;
-    public Vector2 EastCardLocation;
+    public Vector2[] PlayedCardLocations;
     public int CardSpacing;
 
     // Card images
@@ -54,6 +48,7 @@ public class GameView : MonoBehaviour
     private List<CardView> SelectableCards;
     private int NumSelectable;
     private bool Selectable;
+    private bool CardsInHandReady;
     private bool StartDone = false;  // set here to ensure false before object made active
 
     // Card display details
@@ -68,9 +63,6 @@ public class GameView : MonoBehaviour
     void Start()
     {
         // Main thread helper variables
-        PlayerName = string.Empty;
-        EastPlayerName = string.Empty;
-        WestPlayerName = string.Empty;
         CardsInHand = new List<Card>();
         KittyCards = new List<Card>();
         PlayedCards = new List<Card>();
@@ -173,38 +165,28 @@ public class GameView : MonoBehaviour
         }
 
         // names
-        if (PlayerName != string.Empty)
+        if (PlayerNames != null)
         {
-            SouthName.text = PlayerName;
-            PlayerName = string.Empty;
-        }
-        if (WestPlayerName != string.Empty)
-        {
-            WestName.text = WestPlayerName;
-            WestPlayerName = string.Empty;
-        }
-        if (EastPlayerName != string.Empty)
-        {
-            EastName.text = EastPlayerName;
-            EastPlayerName = string.Empty;
+            for (int i = 0; i < PlayerNames.Length; i++)
+            {
+                PlayerNameTexts[i].text = PlayerNames[i];
+            }
+            PlayerNames = null;
         }
     }
 
-    public void ShowPlayerName(string name)
-    { 
-        PlayerName = name;
-    }
-
-    public void ShowPlayerName(bool isBefore, string otherPlayerName)
+    public void ShowPlayerNames(Dictionary<int, string> orderNameMap, int thisPlayerKey)
     {
-        if (isBefore)
+        Queue<string> queue = new Queue<string>();
+        for (int i = 0; i < orderNameMap.Count; i++)
         {
-            WestPlayerName = otherPlayerName;
+            queue.Enqueue(orderNameMap[i]);
         }
-        else 
+        while (queue.Peek() != orderNameMap[thisPlayerKey])
         {
-            EastPlayerName = otherPlayerName;
+            queue.Enqueue(queue.Dequeue());
         }
+        PlayerNames = queue.ToArray();
     }
 
     public void ShowCards(List<Card> cards)
@@ -232,19 +214,12 @@ public class GameView : MonoBehaviour
 
     public void ShowPlayedCard(Card card, string player, bool destroyExisting)
     {
-        Vector3 location = new Vector3(0, 0, 0);
-        if (SouthName.text == player)
-        {
-            location = new Vector3(SouthCardLocation[0], SouthCardLocation[1], 0);
-        }
-        else if (WestName.text == player)
-        {
-            location = new Vector3(WestCardLocation[0], WestCardLocation[1], 0);
-        }
-        else if (EastName.text == player)
-        {
-            location = new Vector3(EastCardLocation[0], EastCardLocation[1], 0);
-        }
+        Vector2 location2D = PlayerNameTexts
+            .Zip(PlayedCardLocations, (t, l) => new { t, l })
+            .Where(a => a.t.text == player)
+            .Select(a => a.l)
+            .Single();
+        Vector3 location = new Vector3(location2D[0], location2D[1], 0);
         lock (PlayedCards)
         {
             PlayedCards.Add(card);
@@ -258,6 +233,7 @@ public class GameView : MonoBehaviour
 
     public void EnableTurn(Card[] validCards)
     {
+        WaitForHandCreated();
         lock (CardViewMap)
         {
             lock (PlayedViews)
@@ -319,6 +295,16 @@ public class GameView : MonoBehaviour
         Monitor.Exit(KittyCards);
     }
 
+    private void WaitForHandCreated()
+    {
+        Monitor.Enter(CardsInHand);
+        while (!CardsInHandReady)
+        {
+            Monitor.Wait(CardsInHand);
+        }
+        Monitor.Exit(CardsInHand);
+    }
+
     private void RemoveCards(IEnumerable<Card> cards)
     {
         lock (CardViewMap)
@@ -345,15 +331,16 @@ public class GameView : MonoBehaviour
         }
 
         // create new cards
-        lock (CardsInHand)
+        Monitor.Enter(CardsInHand);
+        Vector3 location = new Vector3(FirstCardLocation.x, FirstCardLocation.y, 0);
+        foreach (Card card in CardsInHand)
         {
-            Vector3 location = new Vector3(FirstCardLocation.x, FirstCardLocation.y, 0);
-            foreach (Card card in CardsInHand)
-            {
-                CreateAndRegisterCardView(card, location);
-                location.x += CardSpacing;
-            }
+            CreateAndRegisterCardView(card, location);
+            location.x += CardSpacing;
         }
+        CardsInHandReady = true;
+        Monitor.PulseAll(CardsInHand);
+        Monitor.Exit(CardsInHand);
     }
 
     private void AddKittyCards()
@@ -513,6 +500,8 @@ public class GameView : MonoBehaviour
 
     private void ResetButtonsAndSelections()
     {
+        CardsInHandReady = false;
+
         // buttons
         DiscardButton.interactable = false;
         PlayButton.interactable = false;

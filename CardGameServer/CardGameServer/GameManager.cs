@@ -17,6 +17,9 @@ namespace CardGameServer
         private static Dictionary<string, string> PlayerGameNameMap;
         private static Dictionary<string, string> PlayerGameTypeMap;
 
+        private static readonly List<string> Suits = new List<string>() { "C", "D", "S", "H" };
+        private static readonly List<string> Ranks = new List<string>() { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
+
         private static readonly Dictionary<string, Type> GameManagerMap = new Dictionary<string, Type>()
         {
             { "Hearts", typeof(HeartsGameManager) },
@@ -136,7 +139,7 @@ namespace CardGameServer
 
         private static GameManager GetGameManager(string playerId)
         {
-            if (PlayerGameNameMap.ContainsKey(playerId) && GameNameMap.ContainsKey(PlayerGameNameMap[playerId]))
+            if (PlayerGameNameMap.ContainsKey(playerId) && PlayerGameNameMap.ContainsKey(playerId) && GameNameMap[PlayerGameTypeMap[playerId]].ContainsKey(PlayerGameNameMap[playerId]))
             {
                 return GameNameMap[PlayerGameTypeMap[playerId]][PlayerGameNameMap[playerId]];
             }
@@ -197,7 +200,7 @@ namespace CardGameServer
 
         private void Deal()
         {
-            Card[] deck = Deck.Shuffle();
+            Card[] deck = DealCards();
             int idx = 0;
             foreach (Player p in Players)
             {
@@ -240,7 +243,7 @@ namespace CardGameServer
                 Players[winningPlayer].TookATrick = true;
                 DoTrick(CurTrick, Players[winningPlayer]);
 
-                if (player.Cards.Count == 0)
+                if (player.Cards.Count == 12)  // TODO CHANGE BACK
                 {
                     DoLastTrick(winningPlayer);
 
@@ -249,7 +252,7 @@ namespace CardGameServer
 
                     if (Players.Any(p => p.Score >= GetWinningPointTotal()))
                     {
-                        Broadcast(new GameOverMessage(Players.OrderBy(p => p.Score).Last().Name));
+                        Broadcast(new GameOverMessage(GetGameWinningPlayer()));
                         HandleGameOver(this);
                     }
                     else
@@ -354,8 +357,19 @@ namespace CardGameServer
 
         protected virtual Card[] GetValidCards(List<Card> hand, List<Card> trick)
         {
-            return hand.ToArray();
+            string suit = trick[0].Suit;
+            Card[] followSuit = hand.Where(c => c.Suit == suit).ToArray();
+            if (followSuit.Length > 0)
+            {
+                return followSuit;
+            }
+            else
+            {
+                return hand.ToArray();
+            }
         }
+
+        protected abstract string GetGameWinningPlayer();
 
         protected virtual int GetWinningPointTotal()
         {
@@ -370,6 +384,11 @@ namespace CardGameServer
         protected virtual int GetNumCardsInHand()
         {
             return 13;
+        }
+
+        protected virtual Card[] DealCards()
+        {
+            return Deck.Shuffle(Suits, Ranks);
         }
 
         protected virtual void DealExtraCards(IEnumerable<Card> cards)

@@ -6,7 +6,6 @@ namespace CardGameServer
 {
     public class PinochleGameManager : GameManager
     {
-        public static readonly int NUM_KITTY_CARDS = 3;
         public static readonly int MIN_BID = 20;
         public static readonly int ACES_AROUND = 10;
         public static readonly int KINGS_AROUND = 8;
@@ -19,6 +18,11 @@ namespace CardGameServer
         public static readonly int DOUBLE_PINOCHLE = 30;
         public static readonly int TRUMP_NINE = 1;
         public static readonly int TRUMP_RUN = 15;
+
+        private static readonly List<string> Suits = new List<string>() { "C", "D", "S", "H" };
+        private static readonly List<string> Ranks = new List<string>() { "9", "J", "Q", "K", "10", "A" };
+        public static readonly int NUM_SUITS = Suits.Count;
+        public static readonly int NUM_RANKS = Ranks.Count;
 
         private Card[] Kitty;
         private List<int> PassedPlayers;
@@ -95,6 +99,11 @@ namespace CardGameServer
             return TrickDecider.ValidCards(hand, trick, Trump).ToArray();
         }
 
+        protected override string GetGameWinningPlayer()
+        {
+            return GetPlayers().OrderBy(p => p.Score).Last().Name;
+        }
+
         protected override int GetWinningPointTotal()
         {
             return 100;
@@ -108,6 +117,14 @@ namespace CardGameServer
         protected override int GetNumCardsInHand()
         {
             return 15;
+        }
+
+        protected override Card[] DealCards()
+        {
+            List<string> doubleRank = new List<string>();
+            doubleRank.AddRange(Ranks);
+            doubleRank.AddRange(Ranks);
+            return Deck.Shuffle(Suits, doubleRank);
         }
 
         protected override void DealExtraCards(IEnumerable<Card> cards)

@@ -5,15 +5,14 @@ namespace CardGameServer.Models
 {
     public static class Deck
     {
-        public static Card[] Shuffle()
+        public static Card[] Shuffle(List<string> suits, List<string> ranks)
         {
             List<Card> cards = new List<Card>();
-            foreach (string s in Card.Suits)
+            foreach (string s in suits)
             {
-                foreach (string r in Card.Ranks)
+                foreach (string r in ranks)
                 {
-                    Card card = new Card(s, r);
-                    cards.Add(card);
+                    Card card = new Card(s, r, (suits.IndexOf(s) * 100) + ranks.IndexOf(r));
                     cards.Add(card);
                 }
             }
