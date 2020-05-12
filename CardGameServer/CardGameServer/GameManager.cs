@@ -243,7 +243,7 @@ namespace CardGameServer
                 Players[winningPlayer].TookATrick = true;
                 DoTrick(CurTrick, Players[winningPlayer]);
 
-                if (player.Cards.Count == 12)  // TODO CHANGE BACK
+                if (player.Cards.Count == 0)
                 {
                     DoLastTrick(winningPlayer);
 
