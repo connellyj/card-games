@@ -18,6 +18,7 @@ namespace CardGameServer
         {
             SocketServer = new WebSocketServer(2000);
             SocketServer.AddWebSocketService<Router>("/");
+            SocketServer.KeepClean = false;
             GameManager.Init();
         }
 
