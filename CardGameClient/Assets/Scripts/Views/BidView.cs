@@ -10,7 +10,6 @@ public class BidView : MonoBehaviour
     public Button Button;
 
     private int CurBid;
-    private string CurBidStr;
 
     void Start()
     {
@@ -18,19 +17,10 @@ public class BidView : MonoBehaviour
         ErrorText.text = string.Empty;
     }
 
-    void Update()
-    {
-        if (CurBidStr != string.Empty)
-        {
-            BidText.text = CurBidStr;
-            CurBidStr = string.Empty;
-        }
-    }
-
     public void Init(int curBid)
     {
         CurBid = curBid;
-        CurBidStr = curBid.ToString();
+        BidText.text = curBid.ToString();
     }
 
     public void Bid()

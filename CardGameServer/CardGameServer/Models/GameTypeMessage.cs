@@ -17,11 +17,6 @@
             return Type == "GameType";
         }
 
-        public override string GenerateId()
-        {
-            return "gametype:" + ChosenGame;
-        }
-
         protected override void SetType(string type)
         {
             Type = type;

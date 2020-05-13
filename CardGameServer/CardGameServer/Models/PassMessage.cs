@@ -21,11 +21,6 @@
             return Type == "Pass";
         }
 
-        public override string GenerateId()
-        {
-            return PassingPlayer + "to" + PassingTo;
-        }
-
         protected override void SetType(string type)
         {
             Type = type;

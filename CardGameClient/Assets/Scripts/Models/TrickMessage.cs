@@ -13,11 +13,6 @@
         return Type == "Trick";
     }
 
-    public override string GenerateId()
-    {
-        return "trick:" + WinningPlayer;
-    }
-
     protected override void SetType(string type)
     {
         Type = type;

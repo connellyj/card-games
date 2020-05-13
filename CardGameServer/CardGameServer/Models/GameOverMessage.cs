@@ -15,11 +15,6 @@
             return Type == "GameOver";
         }
 
-        public override string GenerateId()
-        {
-            return "gameover:" + WinningPlayer;
-        }
-
         protected override void SetType(string type)
         {
             Type = type;

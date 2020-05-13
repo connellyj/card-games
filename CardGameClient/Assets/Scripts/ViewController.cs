@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -7,6 +8,7 @@ public class ViewController : MonoBehaviour
 {
     public GameTypeView GameTypePopUp;
     public JoinView JoinPopUp;
+    public JoinView CreatePopUp;
     public GameLogView GameLog;
     public GameView GameTable;
     public BidView BidPopUp;
@@ -17,44 +19,9 @@ public class ViewController : MonoBehaviour
 
     public static ViewController Instance;
 
-    private string WinningPlayer;
-    private bool BidEnabled;
-    private bool MeldEnabled;
-    private bool TrumpEnabled;
-    private bool GameOverEnabled;
-
     void Awake()
     {
         Instance = this;
-    }
-
-    void Start()
-    {
-        BidEnabled = false;
-        MeldEnabled = false;
-        TrumpEnabled = false;
-        GameOverEnabled = false;
-    }
-
-    void Update()
-    {
-        if (BidEnabled != BidPopUp.gameObject.activeInHierarchy)
-        {
-            BidPopUp.gameObject.SetActive(BidEnabled);
-        }
-        if (MeldEnabled != MeldSheet.gameObject.activeInHierarchy)
-        {
-            MeldSheet.gameObject.SetActive(MeldEnabled);
-        }
-        if (TrumpEnabled != TrumpPopUp.gameObject.activeInHierarchy)
-        {
-            TrumpPopUp.gameObject.SetActive(TrumpEnabled);
-        }
-        if (GameOverEnabled != GameOverScreen.activeInHierarchy)
-        {
-            WinningPlayerText.text = WinningPlayer;
-            GameOverScreen.SetActive(GameOverEnabled);
-        }
     }
 
     public void UpdateGameTypes(string[] gameTypes)
@@ -98,6 +65,18 @@ public class ViewController : MonoBehaviour
         GameLog.UpdateScore(playerName, score);
     }
 
+    public void HideJoinWindow()
+    {
+        JoinPopUp.Hide();
+        CreatePopUp.Hide();
+    }
+
+    public void SetJoinError(string error)
+    {
+        JoinPopUp.SetError(error);
+        CreatePopUp.SetError(error);
+    }
+
     public void ShowGameTable(bool show)
     {
         GameTable.gameObject.SetActive(show);
@@ -109,12 +88,12 @@ public class ViewController : MonoBehaviour
         {
             BidPopUp.Init(curBid);
         }
-        BidEnabled = show;
+        BidPopUp.gameObject.SetActive(show);
     }
 
     public void ShowTrumpWindow(bool show)
     {
-        TrumpEnabled = show;
+        TrumpPopUp.gameObject.SetActive(show);
     }
 
     public void ShowMeldWindow(bool show, MeldPointsMessage meldPointsMessage=null)
@@ -123,21 +102,28 @@ public class ViewController : MonoBehaviour
         {
             MeldSheet.SetMeldPoints(meldPointsMessage);
         }
-        MeldEnabled = show;
+        MeldSheet.gameObject.SetActive(show);
     }
 
     public void ShowGameOverWindow(bool show, string winningPlayer)
     {
         if (show)
         {
-            WinningPlayer = winningPlayer;
+            WinningPlayerText.text = winningPlayer;
         }
-        GameOverEnabled = show;
+        GameOverScreen.SetActive(show);
     }
 
-    public void WaitForCardsCleared()
+    public void DoOnClear(Action action)
     {
-        GameTable.WaitForCardsCleared();
+        if (GameTable.IsClearEnabled())
+        {
+            GameTable.AddOnClearTask(action);
+        }
+        else
+        {
+            action.Invoke();
+        }
     }
 
     public void UpdateNames(Dictionary<int, string> playerOrderToNameMap, string thisPlayerName)

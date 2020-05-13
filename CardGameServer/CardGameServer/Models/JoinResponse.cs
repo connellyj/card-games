@@ -1,27 +1,22 @@
 ﻿namespace CardGameServer.Models
 {
-    public class Response : Message
+    public class JoinResponse : Message
     {
         public bool Success;
-        public string MessageId;
+        public string UserName;
         public string ErrorMessage;
         public string Type;
 
-        public Response(bool success, string messageId, string errorMessage = null) : base("Response")
+        public JoinResponse(bool success, string userName=null, string errorMessage=null) : base("JoinResponse")
         {
             Success = success;
-            MessageId = messageId;
+            UserName = userName;
             ErrorMessage = errorMessage;
         }
 
         public override bool IsValid()
         {
-            return Type == "Response";
-        }
-
-        public override string GenerateId()
-        {
-            return "response:" + MessageId;
+            return Type == "JoinResponse";
         }
 
         protected override void SetType(string type)

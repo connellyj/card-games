@@ -85,7 +85,7 @@ namespace CardGameServer
                 JoinMessage joinMessage = JsonConvert.DeserializeObject<JoinMessage>(message);
                 if (joinMessage.IsValid())
                 {
-                    GameManager.HandleJoin(joinMessage, ID, joinMessage.GenerateId());
+                    GameManager.HandleJoin(ID, joinMessage);
                     return;
                 }
 

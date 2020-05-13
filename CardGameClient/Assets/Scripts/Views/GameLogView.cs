@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,18 +13,13 @@ public class GameLogView : MonoBehaviour
 
     private string UpdateLogString;
     private string[] PlayerNames;
-    private string[] Info;
 
-    private Dictionary<string, string> ScoreMap = new Dictionary<string, string>();  // init here for lock purposes
+    private Dictionary<string, int> PlayerScoreMap;
 
     void Start()
     {
-        Info = new string[InfoTexts.Length];
         PlayerNames = new string[PlayerNameTexts.Length];
-        lock (ScoreMap)
-        {
-            ScoreMap = new Dictionary<string, string>();
-        }
+        PlayerScoreMap = new Dictionary<string, int>();
         ScrollRect.verticalNormalizedPosition = 0;
     }
 
@@ -36,25 +29,6 @@ public class GameLogView : MonoBehaviour
         {
             Log.text += UpdateLogString;
             UpdateLogString = string.Empty;
-        }
-        for (int i = 0; i < Info.Length; i++)
-        {
-            if (Info[i] != string.Empty)
-            {
-                InfoTexts[i].text = Info[i];
-                Info[i] = string.Empty;
-            }
-        }
-        lock (ScoreMap)
-        {
-            for (int i = 0; i < ScoreMap.Count; i++)
-            {
-                if (ScoreMap[PlayerNames[i]] != string.Empty)
-                {
-                    ScoreTexts[i].text = ScoreMap[PlayerNames[i]];
-                    ScoreMap[PlayerNames[i]] = string.Empty;
-                }
-            }
         }
     }
 
@@ -66,34 +40,28 @@ public class GameLogView : MonoBehaviour
 
     public void SetInfo(string name, string value, int index)
     {
-        Info[index] = name + ": " + value;
+        InfoTexts[index].text = name + ": " + value;
     }
 
     public void ClearInfo()
     {
-        for (int i = 0; i < Info.Length; i++)
+        for (int i = 0; i < InfoTexts.Length; i++)
         {
-            Info[i] = "  ";
+            InfoTexts[i].text = string.Empty;
         }
     }
 
     public void SetNames(Dictionary<int, string> names)
     {
-        lock (ScoreMap)
+        foreach (int key in names.Keys)
         {
-            foreach (int key in names.Keys)
-            {
-                PlayerNames[key] = names[key];
-                ScoreMap.Add(names[key], "0");
-            }
+            PlayerNameTexts[key].text = names[key];
+            PlayerScoreMap.Add(names[key], key);
         }
     }
 
     public void UpdateScore(string player, int score)
     {
-        lock (ScoreMap)
-        {
-            ScoreMap[player] = score.ToString();
-        }
+        ScoreTexts[PlayerScoreMap[player]].text = score.ToString();
     }
 }

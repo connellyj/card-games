@@ -22,11 +22,6 @@
             return Type == "Trump";
         }
 
-        public override string GenerateId()
-        {
-            return ChoosingPlayer + ":" + TrumpSuit;
-        }
-
         protected override void SetType(string type)
         {
             Type = type;

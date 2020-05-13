@@ -22,11 +22,6 @@ public class KittyMessage : Message
         return Type == "Kitty";
     }
 
-    public override string GenerateId()
-    {
-        return ChoosingPlayer + string.Join(",", Kitty.Select(c => c.ToString()));
-    }
-
     protected override void SetType(string type)
     {
         Type = type;

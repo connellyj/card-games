@@ -24,11 +24,6 @@
             return Type == "Bid";
         }
 
-        public override string GenerateId()
-        {
-            return CurBid.ToString() + ":" + Bid.ToString();
-        }
-
         protected override void SetType(string type)
         {
             Type = type;

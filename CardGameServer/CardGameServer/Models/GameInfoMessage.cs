@@ -15,11 +15,6 @@
             return Type == "GameInfo";
         }
 
-        public override string GenerateId()
-        {
-            throw new System.NotImplementedException();
-        }
-
         protected override void SetType(string type)
         {
             Type = type;

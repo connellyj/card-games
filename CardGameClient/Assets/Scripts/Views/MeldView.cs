@@ -16,21 +16,16 @@ public class MeldView : MonoBehaviour
     public TMP_Dropdown Nines;
     public TMP_Dropdown Pinochles;
     public TextMeshProUGUI TotalText;
-    public Button Button;
+    public Button SubmitButton;
     public TextMeshProUGUI ErrorText;
 
     private MeldPointsMessage MeldPoints;
     private MeldMessage Meld;
-    private int Total;
-    private string TotalStr;
-    private bool ButtonEnabled;
 
     void Start()
     {
         ErrorText.gameObject.SetActive(false);
-        TotalStr = string.Empty;
-        ButtonEnabled = false;
-        Button.onClick.AddListener(SubmitMeld);
+        SubmitButton.onClick.AddListener(SubmitMeld);
         JacksAround.onValueChanged.AddListener((int pos) => UpdateTotal());
         QueensAround.onValueChanged.AddListener((int pos) => UpdateTotal());
         KingsAround.onValueChanged.AddListener((int pos) => UpdateTotal());
@@ -44,19 +39,6 @@ public class MeldView : MonoBehaviour
         Pinochles.onValueChanged.AddListener((int pos) => UpdateTotal());
     }
 
-    private void Update()
-    {
-        if (ButtonEnabled != Button.interactable)
-        {
-            Button.interactable = ButtonEnabled;
-        }
-        if (TotalStr != string.Empty)
-        {
-            TotalText.text = TotalStr;
-            TotalStr = string.Empty;
-        }
-    }
-
     public void SetMeldPoints(MeldPointsMessage meld)
     {
         MeldPoints = meld;
@@ -64,23 +46,23 @@ public class MeldView : MonoBehaviour
 
     public void SetMeld(MeldMessage meld)
     {
-        ButtonEnabled = true;
+        SubmitButton.interactable = true;
         Meld = meld;
         UpdateTotal();
     }
 
     private void SubmitMeld()
     {
-        if (!IsValid())
-        {
-            ErrorText.gameObject.SetActive(true);
-        }
-        else
-        {
+        //if (!IsValid())
+        //{
+        //    ErrorText.gameObject.SetActive(true);
+        //}
+        //else
+        //{ TODO UNCOMMENT
             ErrorText.gameObject.SetActive(false);
-            ButtonEnabled = false;
+            SubmitButton.interactable = false;
             Client.Instance.SubmitMeld(Meld);
-        }
+        //}
     }
 
     private bool IsValid()
@@ -100,15 +82,15 @@ public class MeldView : MonoBehaviour
 
     private void UpdateTotal()
     {
-        Total = 0;
-        Total += GetAroundPoints(JacksAround, MeldPoints.JacksAroundPoints);
-        Total += GetAroundPoints(QueensAround, MeldPoints.QueensAroundPoints);
-        Total += GetAroundPoints(KingsAround, MeldPoints.KingsAroundPoints);
-        Total += GetAroundPoints(AcesAround, MeldPoints.AcesAroundPoints);
-        Total += GetAroundPoints(Runs, MeldPoints.RunPoints);
-        Total += GetNumMarriages() * MeldPoints.MarriagePoints;
-        Total += GetPinochlePoints();
-        Total += int.Parse(Nines.options[Nines.value].text) * MeldPoints.TrumpNinePoints;
+        int total = 0;
+        total += GetAroundPoints(JacksAround, MeldPoints.JacksAroundPoints);
+        total += GetAroundPoints(QueensAround, MeldPoints.QueensAroundPoints);
+        total += GetAroundPoints(KingsAround, MeldPoints.KingsAroundPoints);
+        total += GetAroundPoints(AcesAround, MeldPoints.AcesAroundPoints);
+        total += GetAroundPoints(Runs, MeldPoints.RunPoints);
+        total += GetNumMarriages() * MeldPoints.MarriagePoints;
+        total += GetPinochlePoints();
+        total += int.Parse(Nines.options[Nines.value].text) * MeldPoints.TrumpNinePoints;
         if (Meld != null)
         {
             int numMarriages = 0;
@@ -128,10 +110,11 @@ public class MeldView : MonoBehaviour
             {
                 numMarriages = int.Parse(HeartsMarriage.options[HeartsMarriage.value].text);
             }
-            Total -= MeldPoints.MarriagePoints * numMarriages;
-            Total += MeldPoints.TrumpMarriagePoints * numMarriages;
+            total -= MeldPoints.MarriagePoints * numMarriages;
+            total += MeldPoints.TrumpMarriagePoints * numMarriages;
         }
-        TotalStr = Total.ToString();
+
+        TotalText.text = total.ToString();
     }
 
     private int GetAroundPoints(TMP_Dropdown dropdown, int points)

@@ -12,7 +12,6 @@
         }
 
         public abstract bool IsValid();
-        public abstract string GenerateId();
         protected abstract void SetType(string type);
     }
 }

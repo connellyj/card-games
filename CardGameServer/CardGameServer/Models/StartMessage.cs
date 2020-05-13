@@ -17,11 +17,6 @@ namespace CardGameServer.Models
             return Type == "Start";
         }
 
-        public override string GenerateId()
-        {
-            return string.Join(",", Cards.Select(c => c.ToString()));
-        }
-
         protected override void SetType(string type)
         {
             Type = type;

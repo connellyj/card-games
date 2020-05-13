@@ -9,25 +9,14 @@ public class GameTypeView : MonoBehaviour
     public TextMeshProUGUI GameNameText;
     public Button ActionButton;
 
-    private string[] Options;
-
     void Start()
     {
         ActionButton.onClick.AddListener(UpdateGameType);
     }
 
-    void Update()
-    {
-        if (Options != null)
-        {
-            GameTypeDropdown.AddOptions(Options.ToList());
-            Options = null;
-        }
-    }
-
     public void Init(string[] gameTypes)
     {
-        Options = gameTypes;
+        GameTypeDropdown.AddOptions(gameTypes.ToList());
     }
 
     private void UpdateGameType()

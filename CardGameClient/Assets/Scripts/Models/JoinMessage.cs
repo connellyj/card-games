@@ -22,11 +22,6 @@
         return Type == "Join";
     }
 
-    public override string GenerateId()
-    {
-        return UserName + GameName;
-    }
-
     protected override void SetType(string type)
     {
         Type = type;

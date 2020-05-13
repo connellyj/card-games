@@ -19,11 +19,6 @@
             return Type == "Turn";
         }
 
-        public override string GenerateId()
-        {
-            return "turn:" + (Card == null ? "" : Card.ToString());
-        }
-
         protected override void SetType(string type)
         {
             Type = type;

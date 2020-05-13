@@ -62,20 +62,20 @@ namespace CardGameServer
             Server.Instance().Send(new GameInfoMessage(MinPlayerMap[PlayerGameTypeMap[uid]]), uid);
         }
 
-        public static void HandleJoin(JoinMessage message, string uid, string messageHash)
+        public static void HandleJoin(string uid, JoinMessage message)
         {
             if (PlayerGameTypeMap.ContainsKey(uid))
             {
                 if (GameNameMap[PlayerGameTypeMap[uid]].ContainsKey(message.GameName))
                 {
-                    GameNameMap[PlayerGameTypeMap[uid]][message.GameName].Join(message, uid, messageHash);
+                    GameNameMap[PlayerGameTypeMap[uid]][message.GameName].Join(message, uid);
                 }
                 else
                 {
                     GameManager gm = (GameManager)Activator.CreateInstance(GameManagerMap[PlayerGameTypeMap[uid]]);
                     GameNameMap[PlayerGameTypeMap[uid]].Add(message.GameName, gm);
                     Server.Instance().Broadcast(new AvailableGamesMessage(GameNameMap.Keys.ToArray()));
-                    gm.Join(message, uid, messageHash);
+                    gm.Join(message, uid);
                 }
             }
         }
@@ -158,19 +158,19 @@ namespace CardGameServer
             }
         }
 
-        private void Join(JoinMessage message, string uid, string messageHash)
+        private void Join(JoinMessage message, string uid)
         {
             if (!Players.Any(p => p.Name == message.UserName))
             {
                 // handle full game
                 if (Players.Count == GetMinPlayers())
                 {
-                    Server.Instance().Send(new Response(false, messageHash, string.Format("The game '{0}' is full", message.GameName)), uid);
+                    Server.Instance().Send(new JoinResponse(false, errorMessage: string.Format("The game '{0}' is full", message.GameName)), uid);
                     return;
                 }
 
                 // send success response
-                Server.Instance().Send(new Response(true, messageHash), uid);
+                Server.Instance().Send(new JoinResponse(true, message.UserName), uid);
 
                 // inform new player of all existing players
                 foreach (Player p in Players)
@@ -195,8 +195,7 @@ namespace CardGameServer
             }
             else
             {
-                Server.Instance().Send(new Response(false, messageHash, 
-                    string.Format("The name '{0}' already exists in the game '{1}'", message.UserName, message.GameName)), uid);
+                Server.Instance().Send(new JoinResponse(false, errorMessage: string.Format("The name '{0}' already exists in the game '{1}'", message.UserName, message.GameName)), uid);
             }
         }
 

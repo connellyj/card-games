@@ -15,11 +15,6 @@
         return Type == "Score";
     }
 
-    public override string GenerateId()
-    {
-        return PlayerName + ":" + Score;
-    }
-
     protected override void SetType(string type)
     {
         Type = type;

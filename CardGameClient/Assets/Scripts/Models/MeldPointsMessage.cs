@@ -35,11 +35,6 @@
         return Type == "MeldPoints";
     }
 
-    public override string GenerateId()
-    {
-        return "meldpoints";
-    }
-
     protected override void SetType(string type)
     {
         Type = type;

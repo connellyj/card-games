@@ -36,7 +36,7 @@ namespace CardGameServer
             {
                 return points ? PinochleGameManager.TRUMP_RUN * PinochleGameManager.DOUBLE_AROUND_MULTIPLIER : 2;
             }
-            else if (Cards.Where(c => c.Suit == Trump && c.Rank != "9").Distinct().Count() == PinochleGameManager.NUM_RANKS - 1)
+            else if (Cards.Where(c => c.Suit == Trump && c.Rank != "9").Select(c => c.Rank).Distinct().Count() == PinochleGameManager.NUM_RANKS - 1)
             {
                 return points ? PinochleGameManager.TRUMP_RUN : 1;
             }
@@ -107,7 +107,7 @@ namespace CardGameServer
             {
                 return points == 0 ? 2 : PinochleGameManager.DOUBLE_AROUND_MULTIPLIER * points;
             }
-            else if (Cards.Where(c => c.Rank == rank).Distinct().Count() == PinochleGameManager.NUM_SUITS)
+            else if (Cards.Where(c => c.Rank == rank).Select(c => c.Suit).Distinct().Count() == PinochleGameManager.NUM_SUITS)
             {
                 return points == 0 ? 1 : points;
             }

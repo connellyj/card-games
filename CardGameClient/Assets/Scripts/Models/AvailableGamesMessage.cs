@@ -13,11 +13,6 @@
         return Type == "AvailableGames";
     }
 
-    public override string GenerateId()
-    {
-        return string.Join(",", AvailableGames);
-    }
-
     protected override void SetType(string type)
     {
         Type = type;

@@ -15,11 +15,13 @@ public class TrumpView : MonoBehaviour
 
     void Start()
     {
-        TrumpMap = new Dictionary<GameObject, string>();
-        TrumpMap.Add(Clubs, "C");
-        TrumpMap.Add(Diamonds, "D");
-        TrumpMap.Add(Spades, "S");
-        TrumpMap.Add(Hearts, "H");
+        TrumpMap = new Dictionary<GameObject, string>
+        {
+            { Clubs, "C" },
+            { Diamonds, "D" },
+            { Spades, "S" },
+            { Hearts, "H" }
+        };
         Clubs.GetComponent<Button>().onClick.AddListener(() => ToggleHighlight(Clubs));
         Diamonds.GetComponent<Button>().onClick.AddListener(() => ToggleHighlight(Diamonds));
         Spades.GetComponent<Button>().onClick.AddListener(() => ToggleHighlight(Spades));

@@ -47,11 +47,6 @@ public class MeldMessage : Message
         return Type == "Meld";
     }
 
-    public override string GenerateId()
-    {
-        return "meld:" + Trump;
-    }
-
     protected override void SetType(string type)
     {
         Type = type;

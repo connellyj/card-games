@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using WebSocketSharp;
 
@@ -11,10 +12,9 @@ public class Client : MonoBehaviour
     public static Client Instance;
 
     private WebSocket Ws;
-    private List<Response> ResponseQueue;
+    private Queue<Task> MessageTasks;
     private Dictionary<int, string> PlayerOrderMap;
     private string PlayerName;
-    private int NumPlayers;
     private bool StartInitialized;
 
     private static readonly string SystemString = "System";
@@ -26,12 +26,11 @@ public class Client : MonoBehaviour
 
     void Start()
     {
-        ResponseQueue = new List<Response>();
+        MessageTasks = new Queue<Task>();
         PlayerOrderMap = new Dictionary<int, string>();
         StartInitialized = false;
 
         Ws = new WebSocket("ws://localhost:2000");
-        Ws.Connect();
 
         Ws.OnOpen += (sender, e) =>
         {
@@ -53,8 +52,24 @@ public class Client : MonoBehaviour
             string message = e.Data;
             Debug.Log("Server: " + message);
             ViewController.Instance.UpdateLog("Server", message);
-            HandleMessage(message);
+            lock (MessageTasks)
+            {
+                MessageTasks.Enqueue(new Task(() => HandleMessage(message)));
+            }
         };
+
+        Ws.Connect();
+    }
+
+    void Update()
+    {
+        lock (MessageTasks)
+        {
+            while (MessageTasks.Count > 0)
+            {
+                MessageTasks.Dequeue().RunSynchronously();
+            }
+        }
     }
 
     void OnApplicationQuit()
@@ -67,16 +82,9 @@ public class Client : MonoBehaviour
         MessageServer(new GameTypeMessage(game: gameType));
     }
 
-    public Response SubmitJoinGame(string userName, string gameName=null)
+    public void SubmitJoinGame(string userName, string gameName=null)
     {
-        Response response = MessageAndWait(new JoinMessage(userName, gameName));
-        if (response.Success)
-        {
-            PlayerName = userName;
-            ViewController.Instance.ShowGameTable(true);
-            ViewController.Instance.UpdateLog(SystemString, "The game will start once enough players have joined.");
-        }
-        return response;
+        MessageServer(new JoinMessage(userName, gameName));
     }
 
     public void SubmitBid(int curBid, int bid)
@@ -116,179 +124,181 @@ public class Client : MonoBehaviour
     {
         try
         {
-            Response response = JsonConvert.DeserializeObject<Response>(message);
-            if (response.IsValid())
+            lock (MessageTasks)
             {
-                HandleResponse(response);
-                return;
-            }
+                JoinResponse joinResponse = JsonConvert.DeserializeObject<JoinResponse>(message);
+                if (joinResponse.IsValid())
+                {
+                    HandleJoinResponse(joinResponse);
+                    return;
+                }
 
-            GameTypeMessage gameTypeMessage = JsonConvert.DeserializeObject<GameTypeMessage>(message);
-            if (gameTypeMessage.IsValid())
-            {
-                ViewController.Instance.UpdateGameTypes(gameTypeMessage.GameTypes);
-                return;
-            }
+                GameTypeMessage gameTypeMessage = JsonConvert.DeserializeObject<GameTypeMessage>(message);
+                if (gameTypeMessage.IsValid())
+                {
+                    ViewController.Instance.UpdateGameTypes(gameTypeMessage.GameTypes);
+                    return;
+                }
 
                 AvailableGamesMessage gamesMessage = JsonConvert.DeserializeObject<AvailableGamesMessage>(message);
-            if (gamesMessage.IsValid())
-            {
-                ViewController.Instance.UpdateAvailableGames(gamesMessage.AvailableGames);
-                return;
-            }
+                if (gamesMessage.IsValid())
+                {
+                    ViewController.Instance.UpdateAvailableGames(gamesMessage.AvailableGames);
+                    return;
+                }
 
-            GameInfoMessage infoMessage = JsonConvert.DeserializeObject<GameInfoMessage>(message);
-            if (infoMessage.IsValid())
-            {
-                NumPlayers = infoMessage.NumPlayers;
-                return;
-            }
+                GameInfoMessage infoMessage = JsonConvert.DeserializeObject<GameInfoMessage>(message);
+                if (infoMessage.IsValid())
+                {
+                    return;
+                }
 
-            JoinMessage joinMessage = JsonConvert.DeserializeObject<JoinMessage>(message);
-            if (joinMessage.IsValid())
-            {
-                HandleJoin(joinMessage);
-                return;
-            }
+                JoinMessage joinMessage = JsonConvert.DeserializeObject<JoinMessage>(message);
+                if (joinMessage.IsValid())
+                {
+                    HandleJoin(joinMessage);
+                    return;
+                }
 
-            StartMessage startMessage = JsonConvert.DeserializeObject<StartMessage>(message);
-            if (startMessage.IsValid())
-            {
-                HandleStart(startMessage);
-                return;
-            }
+                StartMessage startMessage = JsonConvert.DeserializeObject<StartMessage>(message);
+                if (startMessage.IsValid())
+                {
+                    HandleStart(startMessage);
+                    return;
+                }
 
-            BidMessage bidMessage = JsonConvert.DeserializeObject<BidMessage>(message);
-            if (bidMessage.IsValid())
-            {
-                HandleBid(bidMessage);
-                return;
-            }
+                BidMessage bidMessage = JsonConvert.DeserializeObject<BidMessage>(message);
+                if (bidMessage.IsValid())
+                {
+                    HandleBid(bidMessage);
+                    return;
+                }
 
-            KittyMessage kittyMessage = JsonConvert.DeserializeObject<KittyMessage>(message);
-            if (kittyMessage.IsValid())
-            {
-                HandleKitty(kittyMessage);
-                return;
-            }
+                KittyMessage kittyMessage = JsonConvert.DeserializeObject<KittyMessage>(message);
+                if (kittyMessage.IsValid())
+                {
+                    HandleKitty(kittyMessage);
+                    return;
+                }
 
-            TrumpMessage trumpMessage = JsonConvert.DeserializeObject<TrumpMessage>(message);
-            if (trumpMessage.IsValid())
-            {
-                HandleTrump(trumpMessage);
-                return;
-            }
+                TrumpMessage trumpMessage = JsonConvert.DeserializeObject<TrumpMessage>(message);
+                if (trumpMessage.IsValid())
+                {
+                    HandleTrump(trumpMessage);
+                    return;
+                }
 
-            MeldPointsMessage meldPointsMessage = JsonConvert.DeserializeObject<MeldPointsMessage>(message);
-            if (meldPointsMessage.IsValid())
-            {
-                HandleMeldPoints(meldPointsMessage);
-                return;
-            }
+                MeldPointsMessage meldPointsMessage = JsonConvert.DeserializeObject<MeldPointsMessage>(message);
+                if (meldPointsMessage.IsValid())
+                {
+                    HandleMeldPoints(meldPointsMessage);
+                    return;
+                }
 
-            MeldMessage meldMessage = JsonConvert.DeserializeObject<MeldMessage>(message);
-            if (meldMessage.IsValid())
-            {
-                HandleMeld(meldMessage);
-                return;
-            }
+                MeldMessage meldMessage = JsonConvert.DeserializeObject<MeldMessage>(message);
+                if (meldMessage.IsValid())
+                {
+                    HandleMeld(meldMessage);
+                    return;
+                }
 
-            PassMessage passMessage = JsonConvert.DeserializeObject<PassMessage>(message);
-            if (passMessage.IsValid())
-            {
-                HandlePass(passMessage);
-                return;
-            }
+                PassMessage passMessage = JsonConvert.DeserializeObject<PassMessage>(message);
+                if (passMessage.IsValid())
+                {
+                    HandlePass(passMessage);
+                    return;
+                }
 
-            ScoreMessage scoreMessage = JsonConvert.DeserializeObject<ScoreMessage>(message);
-            if (scoreMessage.IsValid())
-            {
-                ViewController.Instance.UpdateScoreInfo(scoreMessage.PlayerName, scoreMessage.Score);
-                return;
-            }
+                ScoreMessage scoreMessage = JsonConvert.DeserializeObject<ScoreMessage>(message);
+                if (scoreMessage.IsValid())
+                {
+                    ViewController.Instance.UpdateScoreInfo(scoreMessage.PlayerName, scoreMessage.Score);
+                    return;
+                }
 
-            TurnMessage turnMessage = JsonConvert.DeserializeObject<TurnMessage>(message);
-            if (turnMessage.IsValid())
-            {
-                HandleTurn(turnMessage);
-                return;
-            }
+                TurnMessage turnMessage = JsonConvert.DeserializeObject<TurnMessage>(message);
+                if (turnMessage.IsValid())
+                {
+                    HandleTurn(turnMessage);
+                    return;
+                }
 
-            TrickMessage trickMessage = JsonConvert.DeserializeObject<TrickMessage>(message);
-            if (trickMessage.IsValid())
-            {
-                ViewController.Instance.EnableClearPlayedCards();
-                return;
-            }
+                TrickMessage trickMessage = JsonConvert.DeserializeObject<TrickMessage>(message);
+                if (trickMessage.IsValid())
+                {
+                    ViewController.Instance.EnableClearPlayedCards();
+                    return;
+                }
 
-            GameOverMessage gameOverMessage = JsonConvert.DeserializeObject<GameOverMessage>(message);
-            if (gameOverMessage.IsValid())
-            {
-                ViewController.Instance.ShowGameOverWindow(true, gameOverMessage.WinningPlayer);
-                return;
+                GameOverMessage gameOverMessage = JsonConvert.DeserializeObject<GameOverMessage>(message);
+                if (gameOverMessage.IsValid())
+                {
+                    ViewController.Instance.ShowGameOverWindow(true, gameOverMessage.WinningPlayer);
+                    return;
+                }
             }
         }
         catch (Exception err)
         {
             Debug.Log("OnMessage error: " + err.Message);
             Debug.Log("OnMessage stack trace: " + err.StackTrace);
-            ViewController.Instance.UpdateLog("OnMessage error", err.Message);
-            ViewController.Instance.UpdateLog("OnMessage stack trace", err.StackTrace);
         }
     }
 
-    private void HandleResponse(Response response)
+    private void HandleJoinResponse(JoinResponse joinResponse)
     {
-        Monitor.Enter(ResponseQueue);
-        ResponseQueue.Add(response);
-        Monitor.PulseAll(ResponseQueue);
-        Monitor.Exit(ResponseQueue);
+        if (joinResponse.Success)
+        {
+            PlayerName = joinResponse.UserName;
+            ViewController.Instance.ShowGameTable(true);
+            ViewController.Instance.UpdateLog(SystemString, "The game will start once enough players have joined.");
+            ViewController.Instance.HideJoinWindow();
+        }
+        else
+        {
+            ViewController.Instance.SetJoinError(joinResponse.ErrorMessage);
+        }
     }
 
     private void HandleJoin(JoinMessage joinMessage)
     {
-        Monitor.Enter(PlayerOrderMap);
         PlayerOrderMap.Add(joinMessage.Order, joinMessage.UserName);
-        Monitor.PulseAll(PlayerOrderMap);
-        Monitor.Exit(PlayerOrderMap);
         ViewController.Instance.UpdateLog(joinMessage.UserName, joinMessage.ToString());
     }
 
     private void HandleStart(StartMessage message)
     {
-        // Wait until previous round is cleared
-        ViewController.Instance.WaitForCardsCleared();
-
         if (!StartInitialized)
         {
-            WaitForAllPlayers();
             ViewController.Instance.UpdateNames(PlayerOrderMap, PlayerName);
             StartInitialized = true;
         }
 
-        // Display cards and meld sheet
-        ViewController.Instance.ClearInfo();
-        ViewController.Instance.ShowCardsInHand(message.Cards.ToList());
+        ViewController.Instance.DoOnClear(() =>
+        {
+            ViewController.Instance.ClearInfo();
+            ViewController.Instance.ShowCardsInHand(message.Cards.ToList());
+        });
     }
 
     private void HandleBid(BidMessage bidMessage)
     {
-        // Wait until previous round is cleared
-        ViewController.Instance.WaitForCardsCleared();
+        ViewController.Instance.DoOnClear(() =>
+        {
+            if (bidMessage.Bid < 0)
+            {
+                ViewController.Instance.ShowBidWindow(true, bidMessage.CurBid);
+            }
+            else if (bidMessage.Bid == bidMessage.CurBid)
+            {
 
-        if (bidMessage.Bid < 0)
-        {
-            ViewController.Instance.ShowBidWindow(true, bidMessage.CurBid);
-        }
-        else if (bidMessage.Bid == bidMessage.CurBid)
-        {
-
-            ViewController.Instance.UpdateBidInfo(bidMessage.PlayerName, bidMessage.Bid.ToString());
-        }
-        else
-        {
-            ViewController.Instance.UpdateLog(bidMessage.PlayerName, bidMessage.ToString());
-        }
+                ViewController.Instance.UpdateBidInfo(bidMessage.PlayerName, bidMessage.Bid.ToString());
+            }
+            else
+            {
+                ViewController.Instance.UpdateLog(bidMessage.PlayerName, bidMessage.ToString());
+            }
+        });
     }
 
     private void HandleKitty(KittyMessage kittyMessage)
@@ -337,78 +347,42 @@ public class Client : MonoBehaviour
 
     private void HandlePass(PassMessage passMessage)
     {
-        // Wait until previous round is cleared
-        ViewController.Instance.WaitForCardsCleared();
-
-        if (passMessage.PassingPlayer == passMessage.PassingTo)
+        ViewController.Instance.DoOnClear(() =>
         {
-            // no pass
-            ViewController.Instance.UpdatePassingInfo("No pass");
-            SubmitPass(new Card[0]);
-        }
-        else
-        {
-            if (passMessage.PassedCards == null)
+            if (passMessage.PassingPlayer == passMessage.PassingTo)
             {
-                ViewController.Instance.UpdatePassingInfo(passMessage.PassingTo);
-                ViewController.Instance.EnablePass(passMessage.NumToPass);
+                // no pass
+                ViewController.Instance.UpdatePassingInfo("No pass");
+                SubmitPass(new Card[0]);
             }
             else
             {
-                ViewController.Instance.AddCardsInHand(passMessage.PassedCards.ToList());
+                if (passMessage.PassedCards == null)
+                {
+                    ViewController.Instance.UpdatePassingInfo(passMessage.PassingTo);
+                    ViewController.Instance.EnablePass(passMessage.NumToPass);
+                }
+                else
+                {
+                    ViewController.Instance.AddCardsInHand(passMessage.PassedCards.ToList());
+                }
             }
-        }
+        });
     }
 
     private void HandleTurn(TurnMessage turnMessage)
     {
-        // Wait until previous round is cleared
-        ViewController.Instance.WaitForCardsCleared();
-
-        if (turnMessage.Card == null)
+        ViewController.Instance.DoOnClear(() =>
         {
-            ViewController.Instance.EnablePlayCard(turnMessage.ValidCards);
-        }
-        else
-        {
-            ViewController.Instance.ShowPlayedCard(turnMessage.Card, turnMessage.PlayerName, turnMessage.PlayerName == PlayerName);
-        }
-    }
-
-    private void WaitForAllPlayers()
-    {
-        Monitor.Enter(PlayerOrderMap);
-        while (PlayerOrderMap.Count < NumPlayers)
-        {
-            Monitor.Wait(PlayerOrderMap);
-        }
-        Monitor.Exit(PlayerOrderMap);
-    }
-
-    private Response MessageAndWait(Message message)
-    {
-        MessageServer(message);
-        return WaitForResponse(message.GenerateId());
-    }
-
-    private Response WaitForResponse(string hashCode)
-    {
-        if (Ws.IsAlive)
-        {
-            Monitor.Enter(ResponseQueue);
-            while (!ResponseQueue.Select(r => r.MessageId).Contains(hashCode))
+            if (turnMessage.Card == null)
             {
-                Monitor.Wait(ResponseQueue);
+                ViewController.Instance.EnablePlayCard(turnMessage.ValidCards);
             }
-            Response response = ResponseQueue.Where(r => r.MessageId == hashCode).Single();
-            ResponseQueue.Remove(response);
-            Monitor.Exit(ResponseQueue);
-            return response;
-        }
-        else
-        {
-            return new Response(false, "abcdefg", "The server isn't running");
-        }
+            else
+            {
+                ViewController.Instance.ShowPlayedCard(turnMessage.Card, turnMessage.PlayerName, turnMessage.PlayerName == PlayerName);
+            }
+        });
     }
 
     private void MessageServer(Message message)
