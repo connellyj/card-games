@@ -141,7 +141,6 @@ public class GameView : MonoBehaviour
 
     public void ShowPlayedCard(Card card, string player, bool destroyExisting)
     {
-        Debug.Log("show played card: " + card.ToString());
         Vector2 location2D = PlayerNameTexts
             .Zip(PlayedCardLocations, (t, l) => new { t, l })
             .Where(a => a.t.text == player)
@@ -152,7 +151,6 @@ public class GameView : MonoBehaviour
         CardView cardView = Instantiate(CardPrefab, transform.position + location, Quaternion.identity, transform).GetComponent<CardView>();
         cardView.Init(card, ColorMap[card.Suit], SuitMap[card.Suit]);
         PlayedViews.Add(cardView);
-        Debug.Log(string.Join(", ", PlayedViews.Select(c => c.UpperText.text)));
 
         if (destroyExisting)
         {
@@ -256,7 +254,6 @@ public class GameView : MonoBehaviour
         }
         else
         {
-            Debug.Log(string.Join(", ", PlayedViews.Select(c => c.UpperText.text)));
             foreach (CardView cv in PlayedViews)
             {
                 Destroy(cv.gameObject);
@@ -294,6 +291,13 @@ public class GameView : MonoBehaviour
                 SetInteractable(false);
                 SelectedCards.Remove(cardView);
                 cardView.Select(false);
+            }
+            else if (NumSelectable == 1 && SelectedCards.Count == 1)
+            {
+                SelectedCards[0].Select(false);
+                SelectedCards.Clear();
+                SelectedCards.Add(cardView);
+                cardView.Select(true);
             }
             else if (SelectedCards.Count < NumSelectable)
             {

@@ -24,7 +24,7 @@ public class MeldView : MonoBehaviour
 
     void Start()
     {
-        ErrorText.gameObject.SetActive(false);
+        Reset();
         SubmitButton.onClick.AddListener(SubmitMeld);
         JacksAround.onValueChanged.AddListener((int pos) => UpdateTotal());
         QueensAround.onValueChanged.AddListener((int pos) => UpdateTotal());
@@ -37,6 +37,25 @@ public class MeldView : MonoBehaviour
         Runs.onValueChanged.AddListener((int pos) => UpdateTotal());
         Nines.onValueChanged.AddListener((int pos) => UpdateTotal());
         Pinochles.onValueChanged.AddListener((int pos) => UpdateTotal());
+    }
+
+    public void Reset()
+    {
+        Meld = null;
+        JacksAround.value = 0;
+        QueensAround.value = 0;
+        KingsAround.value = 0;
+        AcesAround.value = 0;
+        ClubsMarriage.value = 0;
+        DiamondsMarriage.value = 0;
+        SpadesMarriage.value = 0;
+        HeartsMarriage.value = 0;
+        Runs.value = 0;
+        Nines.value = 0;
+        Pinochles.value = 0;
+        TotalText.text = "0";
+        SubmitButton.interactable = false;
+        ErrorText.gameObject.SetActive(false);
     }
 
     public void SetMeldPoints(MeldPointsMessage meld)
@@ -53,16 +72,14 @@ public class MeldView : MonoBehaviour
 
     private void SubmitMeld()
     {
-        //if (!IsValid())
-        //{
-        //    ErrorText.gameObject.SetActive(true);
-        //}
-        //else
-        //{ TODO UNCOMMENT
-            ErrorText.gameObject.SetActive(false);
-            SubmitButton.interactable = false;
+        if (!IsValid())
+        {
+            ErrorText.gameObject.SetActive(true);
+        }
+        else
+        {
             Client.Instance.SubmitMeld(Meld);
-        //}
+        }
     }
 
     private bool IsValid()

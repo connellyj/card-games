@@ -39,6 +39,10 @@ namespace CardGameServer
                     {
                         return higherCards;
                     }
+                    else
+                    {
+                        return hand;
+                    }
                 }
                 return trumpCards;
             }

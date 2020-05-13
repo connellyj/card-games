@@ -12,13 +12,11 @@ public class GameLogView : MonoBehaviour
     public TextMeshProUGUI[] InfoTexts;
 
     private string UpdateLogString;
-    private string[] PlayerNames;
 
     private Dictionary<string, int> PlayerScoreMap;
 
     void Start()
     {
-        PlayerNames = new string[PlayerNameTexts.Length];
         PlayerScoreMap = new Dictionary<string, int>();
         ScrollRect.verticalNormalizedPosition = 0;
     }
@@ -29,12 +27,17 @@ public class GameLogView : MonoBehaviour
         {
             Log.text += UpdateLogString;
             UpdateLogString = string.Empty;
+            ScrollRect.verticalNormalizedPosition = 0;
         }
     }
 
     public void UpdateLog(string name, string message)
     {
-        string log = name + ": " + message + "\n";
+        if (name.Length > 10)
+        {
+            name = name.Substring(0, 11) + "...";
+        }
+        string log = "<b>" + name + "</b>: " + message + "\n";
         UpdateLogString += log;
     }
 

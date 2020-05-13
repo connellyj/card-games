@@ -100,6 +100,7 @@ public class ViewController : MonoBehaviour
     {
         if (meldPointsMessage != null)
         {
+            MeldSheet.Reset();
             MeldSheet.SetMeldPoints(meldPointsMessage);
         }
         MeldSheet.gameObject.SetActive(show);

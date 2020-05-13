@@ -13,15 +13,17 @@ public class MeldMessage : Message
     public int Pinochle;
     public int TrumpNine;
     public int Run;
+    public int TotalPoints;
 
     public string PlayerName;
     public string Trump;
     public string Type;
 
-    public MeldMessage(string playerName, string trump) : base("Meld")
+    public MeldMessage(string playerName, string trump, int totalPoints) : base("Meld")
     {
         PlayerName = playerName;
         Trump = trump;
+        TotalPoints = totalPoints;
     }
 
     public override string ToString()
@@ -39,7 +41,7 @@ public class MeldMessage : Message
         if (Run > 0) meld.Add("Run x" + Run.ToString());
         if (TrumpNine > 0) meld.Add("9 x" + TrumpNine.ToString());
         string meldStr = meld.Count > 0 ? string.Join(", ", meld) : "None :(";
-        return "Meld: " + meldStr;
+        return "Meld: " + meldStr + " for a total of " + TotalPoints.ToString() + " points";
     }
 
     public override bool IsValid()

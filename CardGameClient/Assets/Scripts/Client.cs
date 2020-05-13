@@ -51,7 +51,6 @@ public class Client : MonoBehaviour
         {
             string message = e.Data;
             Debug.Log("Server: " + message);
-            ViewController.Instance.UpdateLog("Server", message);
             lock (MessageTasks)
             {
                 MessageTasks.Enqueue(new Task(() => HandleMessage(message)));
@@ -106,6 +105,7 @@ public class Client : MonoBehaviour
 
     public void SubmitMeld(MeldMessage message)
     {
+        ViewController.Instance.UpdateLog(message.PlayerName, message.ToString());
         ViewController.Instance.ShowMeldWindow(false);
         MessageServer(message);
     }
@@ -271,14 +271,17 @@ public class Client : MonoBehaviour
         if (!StartInitialized)
         {
             ViewController.Instance.UpdateNames(PlayerOrderMap, PlayerName);
+            ViewController.Instance.ShowCardsInHand(message.Cards.ToList());
             StartInitialized = true;
         }
-
-        ViewController.Instance.DoOnClear(() =>
+        else
         {
-            ViewController.Instance.ClearInfo();
-            ViewController.Instance.ShowCardsInHand(message.Cards.ToList());
-        });
+            ViewController.Instance.DoOnClear(() =>
+            {
+                ViewController.Instance.ClearInfo();
+                ViewController.Instance.ShowCardsInHand(message.Cards.ToList());
+            });
+        }
     }
 
     private void HandleBid(BidMessage bidMessage)
@@ -287,12 +290,19 @@ public class Client : MonoBehaviour
         {
             if (bidMessage.Bid < 0)
             {
-                ViewController.Instance.ShowBidWindow(true, bidMessage.CurBid);
+                if (bidMessage.PlayerName == PlayerName)
+                {
+                    ViewController.Instance.ShowBidWindow(true, bidMessage.CurBid);
+                }
+                else
+                {
+                    ViewController.Instance.UpdateLog(bidMessage.PlayerName, "Bidding...");
+                }
             }
             else if (bidMessage.Bid == bidMessage.CurBid)
             {
-
                 ViewController.Instance.UpdateBidInfo(bidMessage.PlayerName, bidMessage.Bid.ToString());
+                ViewController.Instance.UpdateLog(SystemString, "The final bid is " + bidMessage.Bid.ToString() + " by " + bidMessage.PlayerName);
             }
             else
             {
@@ -304,33 +314,40 @@ public class Client : MonoBehaviour
     private void HandleKitty(KittyMessage kittyMessage)
     {
         ViewController.Instance.ShowCardsInKitty(kittyMessage.Kitty);
+        ViewController.Instance.UpdateLog(kittyMessage.ChoosingPlayer, kittyMessage.ToString());
         if (kittyMessage.ChoosingPlayer == PlayerName)
         {
             ViewController.Instance.EnableDiscardCardsInKitty(kittyMessage.Kitty.Length);
         }
         else
         {
-            ViewController.Instance.UpdateLog(kittyMessage.ChoosingPlayer, kittyMessage.ToString());
             ViewController.Instance.EnableClearCardsInKitty();
         }
     }
 
     private void HandleTrump(TrumpMessage trumpMessage)
     {
-        if (trumpMessage.ChoosingPlayer == PlayerName && trumpMessage.TrumpSuit == string.Empty)
+        if (trumpMessage.TrumpSuit == string.Empty)
         {
-            ViewController.Instance.ShowTrumpWindow(true);
+            ViewController.Instance.UpdateLog(trumpMessage.ChoosingPlayer, "Choosing trump...");
+            if (trumpMessage.ChoosingPlayer == PlayerName)
+            {
+                ViewController.Instance.ShowTrumpWindow(true);
+            }
         }
         else
         {
             ViewController.Instance.UpdateTrumpInfo(trumpMessage.TrumpSuit);
-            ViewController.Instance.GameLog.UpdateLog(trumpMessage.ChoosingPlayer, trumpMessage.ToString());
+            ViewController.Instance.UpdateLog(trumpMessage.ChoosingPlayer, trumpMessage.ToString());
         }
     }
 
     private void HandleMeldPoints(MeldPointsMessage meldPointsMessage)
     {
-        ViewController.Instance.ShowMeldWindow(true, meldPointsMessage);
+        ViewController.Instance.DoOnClear(() =>
+        {
+            ViewController.Instance.ShowMeldWindow(true, meldPointsMessage);
+        });
     }
 
     private void HandleMeld(MeldMessage meldMessage)
@@ -341,7 +358,7 @@ public class Client : MonoBehaviour
         }
         else
         {
-            ViewController.Instance.GameLog.UpdateLog(meldMessage.PlayerName, meldMessage.ToString());
+            ViewController.Instance.UpdateLog(meldMessage.PlayerName, meldMessage.ToString());
         }
     }
 

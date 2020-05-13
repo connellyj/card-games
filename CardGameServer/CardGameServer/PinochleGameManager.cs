@@ -166,7 +166,7 @@ namespace CardGameServer
             else
             {
                 Player player = GetCurrentPlayer();
-                Server.Instance().Send(new BidMessage(player.Name, CurBid), player.Uid);
+                Broadcast(new BidMessage(player.Name, CurBid));
             }
         }
 
@@ -218,7 +218,7 @@ namespace CardGameServer
         private void StartBid(Player player, int dealer)
         {
             LastBidder = dealer;
-            Server.Instance().Send(new BidMessage(player.Name, MIN_BID), player.Uid);
+            Broadcast(new BidMessage(player.Name, MIN_BID));
         }
 
         private void StartKitty(int player)
@@ -228,7 +228,7 @@ namespace CardGameServer
 
         private void StartTrump(int player)
         {
-            Server.Instance().Send(new TrumpMessage(GetPlayer(player).Name), GetPlayer(player).Uid);
+            Broadcast(new TrumpMessage(GetPlayer(player).Name));
         }
 
         private void StartMeld(string trump)
@@ -237,7 +237,7 @@ namespace CardGameServer
             {
                 MeldCounter counter = new MeldCounter(p.Cards, trump);
                 p.MeldScore = counter.TotalMeld();
-                MeldMessage message = new MeldMessage(p.Name, trump)
+                MeldMessage message = new MeldMessage(p.Name, trump, p.MeldScore)
                 {
                     AcesAround = counter.AcesAround(),
                     KingsAround = counter.KingsAround(),
