@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using WebSocketSharp;
@@ -30,7 +29,7 @@ public class Client : MonoBehaviour
         PlayerOrderMap = new Dictionary<int, string>();
         StartInitialized = false;
 
-        Ws = new WebSocket("ws://localhost:2000");
+        Ws = new WebSocket("ws://18.217.141.221:2000");
 
         Ws.OnOpen += (sender, e) =>
         {
