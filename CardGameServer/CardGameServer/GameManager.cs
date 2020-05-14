@@ -26,10 +26,10 @@ namespace CardGameServer
             { "Pinochle", typeof(PinochleGameManager) }
         };
 
-        private static readonly Dictionary<string, int> MinPlayerMap = new Dictionary<string, int>()
+        private static readonly Dictionary<string, GameInfoMessage> GameInfoMap = new Dictionary<string, GameInfoMessage>()
         {
-            { "Hearts", HeartsGameManager.MinPlayers() },
-            { "Pinochle", PinochleGameManager.MinPlayers() }
+            { "Hearts", new GameInfoMessage(HeartsGameManager.MinPlayers()) },
+            { "Pinochle", new GameInfoMessage(PinochleGameManager.MinPlayers()) }
         };
 
         public GameManager()
@@ -59,7 +59,7 @@ namespace CardGameServer
         {
             PlayerGameTypeMap.Add(uid, gameTypeMessage.ChosenGame);
             Server.Instance().Send(new AvailableGamesMessage(GameNameMap[PlayerGameTypeMap[uid]].Keys.ToArray()), uid);
-            Server.Instance().Send(new GameInfoMessage(MinPlayerMap[PlayerGameTypeMap[uid]]), uid);
+            Server.Instance().Send(GameInfoMap[PlayerGameTypeMap[uid]], uid);
         }
 
         public static void HandleJoin(string uid, JoinMessage message)
