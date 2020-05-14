@@ -13,10 +13,10 @@ public class GameView : MonoBehaviour
 
     // Card insantiation
     public GameObject CardPrefab;
-    public Vector2 FirstCardLocation;
-    public Vector2 FirstKittyCardLocation;
-    public Vector2[] PlayedCardLocations;
-    public int CardSpacing;
+    public CardView[] PlayedCards;
+    public CardView FirstKittyCard;
+    public CardView FirstHandCard;
+    public CardView SecondHandCard;
 
     // Card images
     public Sprite ClubImage;
@@ -141,14 +141,13 @@ public class GameView : MonoBehaviour
 
     public void ShowPlayedCard(Card card, string player, bool destroyExisting)
     {
-        Vector2 location2D = PlayerNameTexts
-            .Zip(PlayedCardLocations, (t, l) => new { t, l })
+        Transform tform = PlayerNameTexts
+            .Zip(PlayedCards, (t, l) => new { t, l })
             .Where(a => a.t.text == player)
             .Select(a => a.l)
-            .Single();
-        Vector3 location = new Vector3(location2D[0], location2D[1], 0);
+            .Single().transform;
 
-        CardView cardView = Instantiate(CardPrefab, transform.position + location, Quaternion.identity, transform).GetComponent<CardView>();
+        CardView cardView = Instantiate(CardPrefab, tform.position, tform.rotation, transform).GetComponent<CardView>();
         cardView.Init(card, ColorMap[card.Suit], SuitMap[card.Suit]);
         PlayedViews.Add(cardView);
 
@@ -213,23 +212,29 @@ public class GameView : MonoBehaviour
         CardViewMap = new Dictionary<CardView, Card>();
 
         // create new cards
-        Vector3 location = new Vector3(FirstCardLocation.x, FirstCardLocation.y, 0);
+        Vector3 location = FirstHandCard.transform.position;
         foreach (Card card in cards)
         {
-            CreateAndRegisterCardView(card, location);
-            location.x += CardSpacing;
+            CardView cv = CreateAndRegisterCardView(card, location);
+            location.x += GetCardSpacing(cv);
         }
     }
 
     private void AddKittyCards(IEnumerable<Card> kitty)
     {
         // create new cards
-        Vector3 location = new Vector3(FirstKittyCardLocation.x, FirstKittyCardLocation.y, 0);
+        Vector3 location = FirstKittyCard.transform.position;
         foreach (Card card in kitty)
         {
-            KittyViews.Add(CreateAndRegisterCardView(card, location));
-            location.x += CardSpacing;
+            CardView cv = CreateAndRegisterCardView(card, location);
+            KittyViews.Add(cv);
+            location.x += GetCardSpacing(cv);
         }
+    }
+
+    private float GetCardSpacing(CardView cv)
+    {
+        return SecondHandCard.transform.position.x - FirstHandCard.transform.position.x;
     }
 
     private void DestroyCard(Card card)
@@ -315,7 +320,7 @@ public class GameView : MonoBehaviour
 
     private CardView CreateAndRegisterCardView(Card card, Vector3 location)
     {
-        GameObject cardObject = Instantiate(CardPrefab, transform.position + location, Quaternion.identity, transform);
+        GameObject cardObject = Instantiate(CardPrefab, location, Quaternion.identity, transform);
         CardView cardView = cardObject.GetComponent<CardView>();
         cardView.Init(card, ColorMap[card.Suit], SuitMap[card.Suit]);
         cardView.RegisterSelectListener(() => HandleCardClicked(cardView));
