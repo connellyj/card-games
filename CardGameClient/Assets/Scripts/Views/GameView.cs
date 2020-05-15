@@ -259,7 +259,7 @@ public class GameView : MonoBehaviour
         CardView cv = CardViewMap
             .Where(kvp => card.Equals(kvp.Value))
             .Select(kvp => kvp.Key)
-            .First();
+            .Last();
         Destroy(cv.gameObject);
         CardViewMap.Remove(cv);
     }

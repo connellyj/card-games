@@ -144,10 +144,10 @@ namespace CardGameServer
             Server.Instance().Broadcast(message, Players.Select(p => p.Uid));
         }
 
-        protected void BroadcastScore(string playerName, bool includeMeld = false)
+        protected void BroadcastScore(string playerName)
         {
             Player player = Players.Where(p => p.Name == playerName).Single();
-            Broadcast(new ScoreMessage(playerName, includeMeld ? player.Score + player.MeldScore : player.Score));
+            Broadcast(new ScoreMessage(playerName, player.Score, player.Score - player.OldScore));
         }
 
         protected void StartTurn(int leader, bool isFirstRound=false)
@@ -436,6 +436,10 @@ namespace CardGameServer
 
         private void UpdateAndBroadcastAllScores()
         {
+            foreach (Player p in Players)
+            {
+                p.OldScore = p.Score;
+            }
             DoUpdateScores();
             foreach (Player p in Players)
             {

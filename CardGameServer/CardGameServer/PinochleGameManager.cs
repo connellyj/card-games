@@ -203,7 +203,6 @@ namespace CardGameServer
         {
             // broadcast to all players
             Broadcast(message);
-            BroadcastScore(message.PlayerName, true);
 
             NumMeld++;
 

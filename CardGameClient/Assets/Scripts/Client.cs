@@ -218,7 +218,7 @@ public class Client : MonoBehaviour
                 ScoreMessage scoreMessage = JsonConvert.DeserializeObject<ScoreMessage>(message);
                 if (scoreMessage.IsValid())
                 {
-                    ViewController.Instance.UpdateScoreInfo(scoreMessage.PlayerName, scoreMessage.Score);
+                    HandleScore(scoreMessage);
                     return;
                 }
 
@@ -416,6 +416,12 @@ public class Client : MonoBehaviour
                 ViewController.Instance.ShowPlayedCard(turnMessage.Card, turnMessage.PlayerName, turnMessage.PlayerName == PlayerName);
             }
         });
+    }
+
+    private void HandleScore(ScoreMessage scoreMessage)
+    {
+        ViewController.Instance.UpdateLog(scoreMessage.PlayerName, "Gained " + scoreMessage.ScoreDif + " points");
+        ViewController.Instance.UpdateScoreInfo(scoreMessage.PlayerName, scoreMessage.Score);
     }
 
     private void MessageServer(Message message)
