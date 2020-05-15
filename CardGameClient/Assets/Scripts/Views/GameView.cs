@@ -49,6 +49,10 @@ public class GameView : MonoBehaviour
         { "C", BlackText }, { "D", RedText }, { "S", BlackText },{ "H", RedText }
     };
 
+    // Name colors
+    private static Color NameHighlight = Color.yellow;
+    private static Color NameOriginal = Color.white;
+
     void Start()
     {
         OnClearQueue = new Queue<Task>();
@@ -99,7 +103,12 @@ public class GameView : MonoBehaviour
     public void AddOnClearTask(Action action)
     {
         OnClearQueue.Enqueue(new Task(action));
-    }    
+    }   
+    
+    public void HighlightName(string name, bool highlight)
+    {
+        PlayerNameTexts.Where(p => p.text == name).Single().color = highlight ? NameHighlight : NameOriginal;
+    }
 
     public void ShowPlayerNames(Dictionary<int, string> orderNameMap, int thisPlayerKey)
     {

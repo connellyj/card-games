@@ -390,6 +390,11 @@ public class Client : MonoBehaviour
     {
         ViewController.Instance.DoOnClear(() =>
         {
+            if (turnMessage.IsFirstCard)
+            {
+
+            }
+
             if (turnMessage.Card == null)
             {
                 ViewController.Instance.EnablePlayCard(turnMessage.ValidCards);

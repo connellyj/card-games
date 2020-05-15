@@ -74,7 +74,7 @@ namespace CardGameServer
                 {
                     GameManager gm = (GameManager)Activator.CreateInstance(GameManagerMap[PlayerGameTypeMap[uid]]);
                     GameNameMap[PlayerGameTypeMap[uid]].Add(message.GameName, gm);
-                    Server.Instance().Broadcast(new AvailableGamesMessage(GameNameMap.Keys.ToArray()));
+                    Server.Instance().Broadcast(new AvailableGamesMessage(GameNameMap[PlayerGameTypeMap[uid]].Keys.ToArray()));
                     gm.Join(message, uid);
                 }
             }
@@ -132,6 +132,166 @@ namespace CardGameServer
             {
                 gm.HandleTurn(message);
             }
+        }
+
+        protected void NextPlayer()
+        {
+            CurPlayer = (CurPlayer + 1) % Players.Count;
+        }
+
+        protected void Broadcast(Message message)
+        {
+            Server.Instance().Broadcast(message, Players.Select(p => p.Uid));
+        }
+
+        protected void BroadcastScore(string playerName, bool includeMeld = false)
+        {
+            Player player = Players.Where(p => p.Name == playerName).Single();
+            Broadcast(new ScoreMessage(playerName, includeMeld ? player.Score + player.MeldScore : player.Score));
+        }
+
+        protected void StartTurn(int leader, bool isFirstRound = false)
+        {
+            Leader = leader;
+            CurPlayer = leader;
+            Player player = Players[CurPlayer];
+            CurTrick = new List<Card>();
+            Card[] validCards = isFirstRound ? GetFirstRoundValidCards(player.Cards) : player.Cards.ToArray();
+            Server.Instance().Send(new TurnMessage(player.Name, validCards, isFirstCard: true), player.Uid);
+        }
+
+        protected int GetCurrentPlayerIndex()
+        {
+            return CurPlayer;
+        }
+
+        protected Player GetCurrentPlayer()
+        {
+            return Players[CurPlayer];
+        }
+
+        protected Player GetPlayer(int index)
+        {
+            return Players[index];
+        }
+
+        protected List<Player> GetPlayers()
+        {
+            return Players;
+        }
+
+        protected int GetNumPlayers()
+        {
+            return Players.Count;
+        }
+
+        protected virtual int DoSetStartingPlayer()
+        {
+            return (Dealer + 1) % Players.Count;
+        }
+
+        protected virtual void DoStartRound(int dealer)
+        {
+            StartTurn(CurPlayer, true);
+        }
+
+        protected virtual int DoDecideTrick(List<Card> trick)
+        {
+            string suit = trick[0].Suit;
+            return trick.IndexOf(trick.Where(c => c.Suit == suit).OrderBy(c => c).Last());
+        }
+
+        protected virtual void DoTrick(List<Card> trick, Player winningPlayer)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void DoLastTrick(int winningPlayer)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void DoUpdateScores()
+        {
+            foreach (Player p in GetPlayers())
+            {
+                p.Score += p.SecretScore;
+                p.SecretScore = 0;
+            }
+        }
+
+        protected virtual Card[] GetFirstRoundValidCards(List<Card> hand)
+        {
+            return hand.ToArray();
+        }
+
+        protected virtual Card[] GetValidCards(List<Card> hand, List<Card> trick, bool isFirstTrick)
+        {
+            string suit = trick[0].Suit;
+            Card[] followSuit = hand.Where(c => c.Suit == suit).ToArray();
+            if (followSuit.Length > 0)
+            {
+                return followSuit;
+            }
+            else
+            {
+                return hand.ToArray();
+            }
+        }
+
+        protected virtual string GetGameWinningPlayer()
+        {
+            return Players.OrderBy(p => p.Score).Last().Name;
+        }
+
+        protected virtual int GetWinningPointTotal()
+        {
+            return 100;
+        }
+
+        protected virtual int GetMinPlayers()
+        {
+            return 4;
+        }
+
+        protected virtual int GetNumCardsInHand()
+        {
+            return 13;
+        }
+
+        protected virtual Card[] DealCards()
+        {
+            return Deck.Shuffle(Suits, Ranks);
+        }
+
+        protected virtual void DealExtraCards(IEnumerable<Card> cards)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void HandleKitty(KittyMessage kittyMessage)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void HandleBid(BidMessage bidMessage)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void HandleTrump(TrumpMessage trumpMessage)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void HandleMeld(MeldMessage meldMessage)
+        {
+            // Do nothing by default
+        }
+
+        protected virtual void HandlePass(PassMessage passMessage)
+        {
+            // Do nothing by default
         }
 
         private static void HandleGameOver(GameManager gm)
@@ -222,16 +382,6 @@ namespace CardGameServer
             }
         }
 
-        protected void StartTurn(int leader, bool isFirstRound=false)
-        {
-            Leader = leader;
-            CurPlayer = leader;
-            Player player = Players[CurPlayer];
-            CurTrick = new List<Card>();
-            Card[] validCards = isFirstRound ? GetFirstRoundValidCards(player.Cards) : player.Cards.ToArray();
-            Server.Instance().Send(new TurnMessage(player.Name, validCards), player.Uid);
-        }
-
         private void HandleTurn(TurnMessage message)
         {
             // broadcast to all players
@@ -284,16 +434,6 @@ namespace CardGameServer
             }
         }
 
-        protected void NextPlayer()
-        {
-            CurPlayer = (CurPlayer + 1) % Players.Count;
-        }
-
-        protected void Broadcast(Message message)
-        {
-            Server.Instance().Broadcast(message, Players.Select(p => p.Uid));
-        }
-
         private void UpdateAndBroadcastAllScores()
         {
             DoUpdateScores();
@@ -302,143 +442,6 @@ namespace CardGameServer
                 p.TookATrick = false;
                 BroadcastScore(p.Name);
             }
-        }
-            
-        protected void BroadcastScore(string playerName, bool includeMeld=false)
-        {
-            Player player = Players.Where(p => p.Name == playerName).Single();
-            Broadcast(new ScoreMessage(playerName, includeMeld ? player.Score + player.MeldScore : player.Score));
-        }
-
-        protected int GetCurrentPlayerIndex()
-        {
-            return CurPlayer;
-        }
-
-        protected Player GetCurrentPlayer()
-        {
-            return Players[CurPlayer];
-        }
-
-        protected Player GetPlayer(int index)
-        {
-            return Players[index];
-        }
-
-        protected List<Player> GetPlayers()
-        {
-            return Players;
-        }
-
-        protected int GetNumPlayers()
-        {
-            return Players.Count;
-        }
-
-        protected virtual int DoSetStartingPlayer()
-        {
-            return (Dealer + 1) % Players.Count;
-        }
-
-        protected virtual void DoStartRound(int dealer)
-        {
-            StartTurn(CurPlayer, true);
-        }
-
-        protected virtual int DoDecideTrick(List<Card> trick)
-        {
-            string suit = trick[0].Suit;
-            return trick.IndexOf(trick.Where(c => c.Suit == suit).OrderBy(c => c).Last());
-        }
-
-        protected virtual void DoTrick(List<Card> trick, Player winningPlayer)
-        {
-            // Do nothing by default
-        }
-
-        protected virtual void DoLastTrick(int winningPlayer)
-        {
-            // Do nothing by default
-        }
-
-        protected virtual void DoUpdateScores()
-        {
-            foreach (Player p in GetPlayers())
-            {
-                p.Score += p.SecretScore;
-                p.SecretScore = 0;
-            }
-        }
-
-        protected virtual Card[] GetFirstRoundValidCards(List<Card> hand)
-        {
-            return hand.ToArray();
-        }
-
-        protected virtual Card[] GetValidCards(List<Card> hand, List<Card> trick, bool isFirstTrick)
-        {
-            string suit = trick[0].Suit;
-            Card[] followSuit = hand.Where(c => c.Suit == suit).ToArray();
-            if (followSuit.Length > 0)
-            {
-                return followSuit;
-            }
-            else
-            {
-                return hand.ToArray();
-            }
-        }
-
-        protected abstract string GetGameWinningPlayer();
-
-        protected virtual int GetWinningPointTotal()
-        {
-            return 100;
-        }
-
-        protected virtual int GetMinPlayers()
-        {
-            return 4;
-        }
-
-        protected virtual int GetNumCardsInHand()
-        {
-            return 13;
-        }
-
-        protected virtual Card[] DealCards()
-        {
-            return Deck.Shuffle(Suits, Ranks);
-        }
-
-        protected virtual void DealExtraCards(IEnumerable<Card> cards)
-        {
-            // Do nothing by default
-        }
-
-        protected virtual void HandleKitty(KittyMessage kittyMessage)
-        {
-            // Do nothing by default
-        }
-
-        protected virtual void HandleBid(BidMessage bidMessage)
-        {
-            // Do nothing by default
-        }
-
-        protected virtual void HandleTrump(TrumpMessage trumpMessage)
-        {
-            // Do nothing by default
-        }
-
-        protected virtual void HandleMeld(MeldMessage meldMessage)
-        {
-            // Do nothing by default
-        }
-
-        protected virtual void HandlePass(PassMessage passMessage)
-        {
-            // Do nothing by default
         }
     }
 }
