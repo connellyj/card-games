@@ -6,7 +6,7 @@
     public bool IsFirstCard;
     public string Type;
 
-    public TurnMessage(string playerName, Card[] validCards = null, Card card = null, bool isFirstCard = false) : base("Turn")
+    public TurnMessage(string playerName, Card[] validCards=null, Card card=null, bool isFirstCard=false) : base("Turn")
     {
         PlayerName = playerName;
         ValidCards = validCards;

@@ -157,7 +157,7 @@ namespace CardGameServer
             Player player = Players[CurPlayer];
             CurTrick = new List<Card>();
             Card[] validCards = isFirstRound ? GetFirstRoundValidCards(player.Cards) : player.Cards.ToArray();
-            Server.Instance().Send(new TurnMessage(player.Name, validCards, isFirstCard: true), player.Uid);
+            Broadcast(new TurnMessage(player.Name, validCards, isFirstCard: true));
         }
 
         protected int GetCurrentPlayerIndex()

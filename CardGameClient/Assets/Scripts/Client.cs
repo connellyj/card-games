@@ -277,6 +277,7 @@ public class Client : MonoBehaviour
         {
             ViewController.Instance.DoOnClear(() =>
             {
+                ViewController.Instance.UnHighlightNames();
                 ViewController.Instance.ClearInfo();
                 ViewController.Instance.ShowCardsInHand(message.Cards.ToList());
             });
@@ -392,12 +393,16 @@ public class Client : MonoBehaviour
         {
             if (turnMessage.IsFirstCard)
             {
-
+                ViewController.Instance.UnHighlightNames();
+                ViewController.Instance.HighlightName(turnMessage.PlayerName);
             }
 
             if (turnMessage.Card == null)
             {
-                ViewController.Instance.EnablePlayCard(turnMessage.ValidCards);
+                if (turnMessage.PlayerName == PlayerName)
+                {
+                    ViewController.Instance.EnablePlayCard(turnMessage.ValidCards);
+                }
             }
             else
             {

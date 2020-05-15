@@ -183,4 +183,14 @@ public class ViewController : MonoBehaviour
     {
         GameTable.EnableTurn(validCards);
     }
+
+    public void HighlightName(string name)
+    {
+        GameTable.HighlightName(name);
+    }
+
+    public void UnHighlightNames()
+    {
+        GameTable.UnHighlightNames();
+    }
 }

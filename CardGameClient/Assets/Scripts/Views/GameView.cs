@@ -105,9 +105,17 @@ public class GameView : MonoBehaviour
         OnClearQueue.Enqueue(new Task(action));
     }   
     
-    public void HighlightName(string name, bool highlight)
+    public void HighlightName(string name)
     {
-        PlayerNameTexts.Where(p => p.text == name).Single().color = highlight ? NameHighlight : NameOriginal;
+        PlayerNameTexts.Where(p => p.text == name).Single().color = NameHighlight;
+    }
+
+    public void UnHighlightNames()
+    {
+        foreach (TextMeshProUGUI t in PlayerNameTexts)
+        {
+            t.color = NameOriginal;
+        }
     }
 
     public void ShowPlayerNames(Dictionary<int, string> orderNameMap, int thisPlayerKey)
