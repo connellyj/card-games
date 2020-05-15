@@ -5,13 +5,15 @@
         public string PlayerName;
         public int Score;
         public int ScoreDif;
+        public int MissedBy;
         public string Type;
 
-        public ScoreMessage(string playerName, int score, int scoreDif) : base("Score")
+        public ScoreMessage(string playerName, int score, int scoreDif, int missedBy) : base("Score")
         {
             PlayerName = playerName;
             Score = score;
             ScoreDif = scoreDif;
+            MissedBy = missedBy;
         }
 
         public override bool IsValid()

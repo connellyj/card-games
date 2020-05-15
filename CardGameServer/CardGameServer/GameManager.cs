@@ -147,7 +147,7 @@ namespace CardGameServer
         protected void BroadcastScore(string playerName)
         {
             Player player = Players.Where(p => p.Name == playerName).Single();
-            Broadcast(new ScoreMessage(playerName, player.Score, player.Score - player.OldScore));
+            Broadcast(new ScoreMessage(playerName, player.Score, player.Score - player.OldScore, player.MissedBidBy));
         }
 
         protected void StartTurn(int leader, bool isFirstRound=false)

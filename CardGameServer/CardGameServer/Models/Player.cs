@@ -12,6 +12,7 @@ namespace CardGameServer.Models
         public int SecretScore;
         public int MeldScore;
         public int OldScore;
+        public int MissedBidBy;
         public int Order;
         public bool TookATrick;
 
@@ -25,6 +26,7 @@ namespace CardGameServer.Models
             SecretScore = 0;
             MeldScore = 0;
             OldScore = 0;
+            MissedBidBy = 0;
             TookATrick = false;
         }
     }

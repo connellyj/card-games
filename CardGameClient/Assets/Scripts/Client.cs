@@ -420,7 +420,11 @@ public class Client : MonoBehaviour
 
     private void HandleScore(ScoreMessage scoreMessage)
     {
-        ViewController.Instance.UpdateLog(scoreMessage.PlayerName, "Gained " + scoreMessage.ScoreDif + " points");
+        ViewController.Instance.UpdateLog(scoreMessage.PlayerName, "Gained " + scoreMessage.ScoreDif.ToString() + " points");
+        if (scoreMessage.MissedBy > 0)
+        {
+            ViewController.Instance.UpdateLog(scoreMessage.PlayerName, "Missed bid by " + scoreMessage.MissedBy.ToString() + " points");
+        }
         ViewController.Instance.UpdateScoreInfo(scoreMessage.PlayerName, scoreMessage.Score);
     }
 

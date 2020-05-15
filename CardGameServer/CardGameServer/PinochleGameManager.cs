@@ -77,6 +77,7 @@ namespace CardGameServer
             Player biddingPlayer = GetPlayer(LastBidder);
             if (biddingPlayer.SecretScore + biddingPlayer.MeldScore < CurBid)
             {
+                biddingPlayer.MissedBidBy = CurBid - (biddingPlayer.SecretScore + biddingPlayer.MeldScore);
                 biddingPlayer.Score -= CurBid;
                 biddingPlayer.SecretScore = 0;
                 biddingPlayer.MeldScore = 0;
