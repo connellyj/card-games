@@ -72,7 +72,7 @@ public class MeldView : MonoBehaviour
 
     private void SubmitMeld()
     {
-        if (!IsValid())
+        if (false) //!IsValid()) // UNCOMMENT!!
         {
             ErrorText.gameObject.SetActive(true);
         }

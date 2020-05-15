@@ -348,7 +348,7 @@ namespace CardGameServer
                 Broadcast(message);
 
                 // there are enough players, so start the game
-                if (Players.Count == 14) // CHANGE BACK!!
+                if (Players.Count == GetMinPlayers())
                 {
                     StartRound();
                 }
@@ -402,7 +402,7 @@ namespace CardGameServer
                 Players[winningPlayer].TookATrick = true;
                 DoTrick(CurTrick, Players[winningPlayer]);
 
-                if (player.Cards.Count == 0)
+                if (player.Cards.Count == 14)  // UNCOMMENT!!
                 {
                     DoLastTrick(winningPlayer);
 
