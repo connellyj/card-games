@@ -33,10 +33,10 @@ public class MeldMessage : Message
         if (KingsAround > 0) meld.Add("Kings Around x" + KingsAround.ToString());
         if (QueensAround > 0) meld.Add("Queens Around x" + QueensAround.ToString());
         if (JacksAround > 0) meld.Add("Jacks Around x" + JacksAround.ToString());
-        if (ClubsMarriage > 0) meld.Add("Marriage in Clubs x" + ClubsMarriage.ToString());
-        if (DiamondsMarriage > 0) meld.Add("Marriage in Diamonds x" + DiamondsMarriage.ToString());
-        if (SpadesMarriage > 0) meld.Add("Marriage in Spades x" + SpadesMarriage.ToString());
-        if (HeartsMarriage > 0) meld.Add("Marriage in Hearts x" + HeartsMarriage.ToString());
+        if (ClubsMarriage > 0) meld.Add("\u2663 Marriage x" + ClubsMarriage.ToString());
+        if (DiamondsMarriage > 0) meld.Add("\u2666 Marriage x" + DiamondsMarriage.ToString());
+        if (SpadesMarriage > 0) meld.Add("\u2660 Marriage x" + SpadesMarriage.ToString());
+        if (HeartsMarriage > 0) meld.Add("\u2665 Marriage x" + HeartsMarriage.ToString());
         if (Pinochle > 0) meld.Add("Pinochle x" + Pinochle.ToString());
         if (Run > 0) meld.Add("Run x" + Run.ToString());
         if (TrumpNine > 0) meld.Add("9 x" + TrumpNine.ToString());

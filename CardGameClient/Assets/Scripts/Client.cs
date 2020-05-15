@@ -17,6 +17,13 @@ public class Client : MonoBehaviour
     private bool StartInitialized;
 
     private static readonly string SystemString = "System";
+    private static readonly Dictionary<string, string> SuitUnicodeMap = new Dictionary<string, string>()
+    {
+        { "C", "\u2663" },
+        { "D", "\u2666" },
+        { "S", "\u2660" },
+        { "H", "\u2665" }
+    };
 
     void Awake()
     {
@@ -337,8 +344,8 @@ public class Client : MonoBehaviour
         }
         else
         {
-            ViewController.Instance.UpdateTrumpInfo(trumpMessage.TrumpSuit);
-            ViewController.Instance.UpdateLog(trumpMessage.ChoosingPlayer, trumpMessage.ToString());
+            ViewController.Instance.UpdateTrumpInfo(SuitUnicodeMap[trumpMessage.TrumpSuit]);
+            ViewController.Instance.UpdateLog(trumpMessage.ChoosingPlayer, trumpMessage.ToString() + SuitUnicodeMap[trumpMessage.TrumpSuit]);
         }
     }
 

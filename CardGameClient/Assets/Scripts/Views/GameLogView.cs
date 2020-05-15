@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,13 +28,13 @@ public class GameLogView : MonoBehaviour
         {
             Log.text += UpdateLogString;
             UpdateLogString = string.Empty;
-            ScrollRect.verticalNormalizedPosition = 0;
+            StartCoroutine(ScrollToBottom());
         }
     }
 
     public void UpdateLog(string name, string message)
     {
-        if (name.Length > 10)
+        if (name.Length > 11)
         {
             name = name.Substring(0, 11) + "...";
         }
@@ -60,11 +61,19 @@ public class GameLogView : MonoBehaviour
         {
             PlayerNameTexts[key].text = names[key];
             PlayerScoreMap.Add(names[key], key);
+            UpdateScore(names[key], 0);
         }
     }
 
     public void UpdateScore(string player, int score)
     {
         ScoreTexts[PlayerScoreMap[player]].text = score.ToString();
+    }
+
+    private IEnumerator ScrollToBottom()
+    {
+        yield return new WaitForEndOfFrame();
+        ScrollRect.verticalNormalizedPosition = 0;
+        yield return null;
     }
 }

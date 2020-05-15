@@ -12,7 +12,7 @@
 
     public override string ToString()
     {
-        return TrumpSuit == string.Empty ? "Choosing trump..." : "Trump is: " + TrumpSuit;
+        return TrumpSuit == string.Empty ? "Choosing trump..." : "Trump is: ";
     }
 
     public override bool IsValid()

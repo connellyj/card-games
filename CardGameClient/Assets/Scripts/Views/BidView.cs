@@ -7,13 +7,15 @@ public class BidView : MonoBehaviour
     public TMP_InputField BidInput;
     public TextMeshProUGUI BidText;
     public TextMeshProUGUI ErrorText;
-    public Button Button;
+    public Button BidButton;
+    public Button PassButton;
 
     private int CurBid;
 
     void Start()
     {
-        Button.onClick.AddListener(Bid);
+        BidButton.onClick.AddListener(Bid);
+        PassButton.onClick.AddListener(Pass);
         ErrorText.text = string.Empty;
     }
 
@@ -21,16 +23,22 @@ public class BidView : MonoBehaviour
     {
         CurBid = curBid;
         BidText.text = curBid.ToString();
+        BidInput.text = string.Empty;
+        ErrorText.text = string.Empty;
+    }
+
+    public void Pass()
+    {
+        Client.Instance.SubmitBid(CurBid, 0);
     }
 
     public void Bid()
     {
         if (int.TryParse(BidInput.text.Trim(), out int bid))
         {
-            if (bid > CurBid || bid == 0)
+            if (bid > CurBid)
             {
                 Client.Instance.SubmitBid(CurBid, bid);
-                ErrorText.text = string.Empty;
             }
             else
             {
