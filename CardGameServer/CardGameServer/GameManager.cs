@@ -150,7 +150,7 @@ namespace CardGameServer
             Broadcast(new ScoreMessage(playerName, includeMeld ? player.Score + player.MeldScore : player.Score));
         }
 
-        protected void StartTurn(int leader, bool isFirstRound = false)
+        protected void StartTurn(int leader, bool isFirstRound=false)
         {
             Leader = leader;
             CurPlayer = leader;

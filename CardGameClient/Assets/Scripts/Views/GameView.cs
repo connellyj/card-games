@@ -41,9 +41,9 @@ public class GameView : MonoBehaviour
     private bool Selectable;
 
     // Card display details
+    public static readonly string RedText = "FF0000";
+    public static readonly string BlackText = "000000";
     private Dictionary<string, Sprite> SuitMap;
-    private static readonly string RedText = "FF0000";
-    private static readonly string BlackText = "000000";
     private static readonly Dictionary<string, string> ColorMap = new Dictionary<string, string>()
     {
         { "C", BlackText }, { "D", RedText }, { "S", BlackText },{ "H", RedText }

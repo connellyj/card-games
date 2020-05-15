@@ -29781,8 +29781,8 @@ MonoBehaviour:
   BidInput: {fileID: 1050273688}
   BidText: {fileID: 486862520}
   ErrorText: {fileID: 286993702}
-  BidButton: {fileID: 0}
-  PassButton: {fileID: 0}
+  BidButton: {fileID: 6077745708973182710}
+  PassButton: {fileID: 1391240749}
 --- !u!222 &6077745707495482126
 CanvasRenderer:
   m_ObjectHideFlags: 0

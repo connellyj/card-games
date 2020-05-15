@@ -19,10 +19,10 @@ public class Client : MonoBehaviour
     private static readonly string SystemString = "System";
     private static readonly Dictionary<string, string> SuitUnicodeMap = new Dictionary<string, string>()
     {
-        { "C", "\u2663" },
-        { "D", "\u2666" },
-        { "S", "\u2660" },
-        { "H", "\u2665" }
+        { "C", "<color=#" + GameView.BlackText + ">\u2663</color>" },
+        { "D", "<color=#" + GameView.RedText + ">\u2666</color>" },
+        { "S", "<color=#" + GameView.BlackText + ">\u2660</color>" },
+        { "H", "<color=#" + GameView.RedText + ">\u2665</color>" }
     };
 
     void Awake()
