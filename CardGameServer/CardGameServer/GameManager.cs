@@ -348,7 +348,7 @@ namespace CardGameServer
                 Broadcast(message);
 
                 // there are enough players, so start the game
-                if (Players.Count == GetMinPlayers())
+                if (Players.Count == 14) // CHANGE BACK!!
                 {
                     StartRound();
                 }
