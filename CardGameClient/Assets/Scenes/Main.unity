@@ -4863,8 +4863,8 @@ MonoBehaviour:
   BidPopUp: {fileID: 6077745707495482124}
   MeldSheet: {fileID: 340759420}
   TrumpPopUp: {fileID: 6077745709256252952}
-  GameOverScreen: {fileID: 0}
-  StoppedScreen: {fileID: 0}
+  GameOverScreen: {fileID: 2090246155}
+  StoppedScreen: {fileID: 924612174}
 --- !u!1 &377294467
 GameObject:
   m_ObjectHideFlags: 0
