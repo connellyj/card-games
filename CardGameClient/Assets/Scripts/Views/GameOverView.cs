@@ -13,6 +13,7 @@ public class GameOverView : MonoBehaviour
     void Start()
     {
         ExitButton.onClick.AddListener(() => Application.Quit());
+        RestartButton.onClick.AddListener(Client.Instance.SubmitRestart);
     }
 
     public void SetWinningPlayer(string winningPlayer)

@@ -59,6 +59,13 @@ public class ViewController : MonoBehaviour
         GameLog.ClearInfo();
     }
 
+    public void ClearGameLog()
+    {
+        GameLog.ClearInfo();
+        GameLog.ClearLog();
+        GameLog.ResetScores();
+    }
+
     public void UpdateScoreInfo(string playerName, int score)
     {
         GameLog.UpdateScore(playerName, score);
@@ -105,7 +112,7 @@ public class ViewController : MonoBehaviour
         MeldSheet.gameObject.SetActive(show);
     }
 
-    public void ShowGameOverWindow(bool show, string winningPlayer)
+    public void ShowGameOverWindow(bool show, string winningPlayer=null)
     {
         if (show)
         {

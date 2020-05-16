@@ -35,8 +35,7 @@ namespace CardGameServer
         public GameManager()
         {
             Players = new List<Player>();
-            CurTrick = new List<Card>();
-            Dealer = 0;
+            Reset();
         }
 
         public static void Init()
@@ -58,7 +57,10 @@ namespace CardGameServer
         public static void HandleGameTypes(string uid, GameTypeMessage gameTypeMessage)
         {
             PlayerGameTypeMap.Add(uid, gameTypeMessage.ChosenGame);
-            Server.Instance().Send(new AvailableGamesMessage(GameNameMap[PlayerGameTypeMap[uid]].Keys.ToArray()), uid);
+            IEnumerable<string> games = GameNameMap[PlayerGameTypeMap[uid]]
+                .Where(kvp => kvp.Value.GetNumPlayers() < kvp.Value.GetMinPlayers())
+                .Select(kvp => kvp.Key);
+            Server.Instance().Send(new AvailableGamesMessage(games.ToArray()), uid);
             Server.Instance().Send(GameInfoMap[PlayerGameTypeMap[uid]], uid);
         }
 
@@ -68,6 +70,15 @@ namespace CardGameServer
             if (gm != null)
             {
                 gm.HandleDisconnect(uid);
+            }
+        }
+
+        public static void HandleRestart(string playerUid, RestartMessage restartMessage)
+        {
+            GameManager gm = GetGameManager(playerUid);
+            if (gm != null)
+            {
+                gm.HandleRestart(restartMessage);
             }
         }
 
@@ -277,13 +288,6 @@ namespace CardGameServer
             // Do nothing by default
         }
 
-        protected virtual void HandleDisconnect(string playerId)
-        {
-            string playerName = Players.Where(p => p.Uid == playerId).Single().Name;
-            Broadcast(new DisconnectMessage(playerName));
-            RemoveGameManager(GameNameMap[PlayerGameTypeMap[playerId]][PlayerGameNameMap[playerId]]);
-        }
-
         protected virtual void HandleKitty(KittyMessage kittyMessage)
         {
             // Do nothing by default
@@ -311,7 +315,8 @@ namespace CardGameServer
 
         private static void HandleGameOver(GameManager gm)
         {
-            RemoveGameManager(gm);
+            //todo: remove at some point!!
+            //RemoveGameManager(gm);
         }
 
         private static void RemoveGameManager(GameManager gm)
@@ -336,6 +341,20 @@ namespace CardGameServer
             {
                 return null;
             }
+        }
+
+        private void HandleDisconnect(string playerId)
+        {
+            string playerName = Players.Where(p => p.Uid == playerId).Single().Name;
+            Broadcast(new DisconnectMessage(playerName));
+            RemoveGameManager(GameNameMap[PlayerGameTypeMap[playerId]][PlayerGameNameMap[playerId]]);
+        }
+
+        private void HandleRestart(RestartMessage restartMessage)
+        {
+            Broadcast(restartMessage);
+            Reset();
+            StartRound();
         }
 
         private void Join(JoinMessage message, string uid)
@@ -465,6 +484,19 @@ namespace CardGameServer
             {
                 p.ResetPerHandScores();
                 BroadcastScore(p.Name);
+            }
+        }
+
+        private void Reset()
+        {
+            CurTrick = new List<Card>();
+            Dealer = 0;
+            Leader = 0;
+            CurPlayer = 0;
+            foreach (Player p in Players)
+            {
+                p.ResetScores();
+                p.Cards = null;
             }
         }
     }

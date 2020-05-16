@@ -42,6 +42,11 @@ public class GameLogView : MonoBehaviour
         UpdateLogString += log;
     }
 
+    public void ClearLog()
+    {
+        Log.text = string.Empty;
+    }
+
     public void SetInfo(string name, string value, int index)
     {
         InfoTexts[index].text = name + ": " + value;
@@ -61,13 +66,21 @@ public class GameLogView : MonoBehaviour
         {
             PlayerNameTexts[key].text = names[key];
             PlayerScoreMap.Add(names[key], key);
-            UpdateScore(names[key], 0);
         }
+        ResetScores();
     }
 
     public void UpdateScore(string player, int score)
     {
         ScoreTexts[PlayerScoreMap[player]].text = score.ToString();
+    }
+
+    public void ResetScores()
+    {
+        foreach (TextMeshProUGUI t in ScoreTexts)
+        {
+            t.text = "0";
+        }
     }
 
     private IEnumerator ScrollToBottom()

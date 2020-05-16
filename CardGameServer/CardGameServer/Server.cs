@@ -95,6 +95,13 @@ namespace CardGameServer
 
             private void HandleMessage(string message)
             {
+                RestartMessage restartMessage = JsonConvert.DeserializeObject<RestartMessage>(message);
+                if (restartMessage.IsValid())
+                {
+                    GameManager.HandleRestart(ID, restartMessage);
+                    return;
+                }
+
                 GameTypeMessage gameTypeMessage = JsonConvert.DeserializeObject<GameTypeMessage>(message);
                 if (gameTypeMessage.IsValid())
                 {

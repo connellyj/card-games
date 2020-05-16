@@ -22,8 +22,7 @@ namespace CardGameServer.Models
             Name = name;
             Uid = uid;
             Order = order;
-            Score = 0;
-            ResetPerHandScores();
+            ResetScores();
         }
 
         public void ResetPerHandScores()
@@ -33,6 +32,12 @@ namespace CardGameServer.Models
             OldScore = 0;
             MissedBidBy = 0;
             TookATrick = false;
+        }
+
+        public void ResetScores()
+        {
+            Score = 0;
+            ResetPerHandScores();
         }
     }
 }

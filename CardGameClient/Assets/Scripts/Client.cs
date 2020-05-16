@@ -88,6 +88,11 @@ public class Client : MonoBehaviour
         MessageServer(new GameTypeMessage(game: gameType));
     }
 
+    public void SubmitRestart()
+    {
+        MessageServer(new RestartMessage(PlayerName));
+    }
+
     public void SubmitJoinGame(string userName, string gameName=null)
     {
         MessageServer(new JoinMessage(userName, gameName));
@@ -140,10 +145,10 @@ public class Client : MonoBehaviour
                     return;
                 }
 
-                JoinResponse joinResponse = JsonConvert.DeserializeObject<JoinResponse>(message);
-                if (joinResponse.IsValid())
+                RestartMessage restartMessage = JsonConvert.DeserializeObject<RestartMessage>(message);
+                if (restartMessage.IsValid())
                 {
-                    HandleJoinResponse(joinResponse);
+                    HandleRestart(restartMessage);
                     return;
                 }
 
@@ -151,6 +156,13 @@ public class Client : MonoBehaviour
                 if (gameTypeMessage.IsValid())
                 {
                     ViewController.Instance.UpdateGameTypes(gameTypeMessage.GameTypes);
+                    return;
+                }
+
+                JoinResponse joinResponse = JsonConvert.DeserializeObject<JoinResponse>(message);
+                if (joinResponse.IsValid())
+                {
+                    HandleJoinResponse(joinResponse);
                     return;
                 }
 
@@ -247,7 +259,7 @@ public class Client : MonoBehaviour
                 GameOverMessage gameOverMessage = JsonConvert.DeserializeObject<GameOverMessage>(message);
                 if (gameOverMessage.IsValid())
                 {
-                    ViewController.Instance.ShowGameOverWindow(true, gameOverMessage.WinningPlayer);
+                    HandleGameOver(gameOverMessage);
                     return;
                 }
             }
@@ -262,6 +274,13 @@ public class Client : MonoBehaviour
     private void HandleDisconnect(DisconnectMessage disconnectMessage)
     {
         ViewController.Instance.StopGame(disconnectMessage.PlayerName);
+    }
+
+    private void HandleRestart(RestartMessage restartMessage)
+    {
+        ViewController.Instance.ClearGameLog();
+        ViewController.Instance.ShowGameOverWindow(false);
+        ViewController.Instance.UpdateLog(restartMessage.PlayerName, "Restarted the game");
     }
 
     private void HandleJoinResponse(JoinResponse joinResponse)
@@ -441,6 +460,11 @@ public class Client : MonoBehaviour
             ViewController.Instance.UpdateLog(scoreMessage.PlayerName, "Missed bid by " + scoreMessage.MissedBy.ToString() + " points");
         }
         ViewController.Instance.UpdateScoreInfo(scoreMessage.PlayerName, scoreMessage.Score);
+    }
+
+    private void HandleGameOver(GameOverMessage gameOverMessage)
+    {
+        ViewController.Instance.DoOnClear(() => ViewController.Instance.ShowGameOverWindow(true, gameOverMessage.WinningPlayer));
     }
 
     private void MessageServer(Message message)
