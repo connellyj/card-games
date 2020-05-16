@@ -88,6 +88,11 @@ public class Client : MonoBehaviour
         MessageServer(new GameTypeMessage(game: gameType));
     }
 
+    public void SubmitSettings(bool reverse)
+    {
+        MessageServer(new SettingsMessage(reverse));
+    }
+
     public void SubmitRestart(bool newGame)
     {
         MessageServer(new RestartMessage(PlayerName, newGame));

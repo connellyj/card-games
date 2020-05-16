@@ -5,12 +5,16 @@ public class Card : IComparable<Card>, IEquatable<Card>
     public string Suit;
     public string Rank;
     public int SortKey;
+    public int ReverseSortKey;
+    public bool Reverse;
 
-    public Card(string suit, string rank, int sortKey)
+    public Card(string suit, string rank, int sortKey, int reverseKey)
     {
         Suit = suit;
         Rank = rank;
         SortKey = sortKey;
+        ReverseSortKey = reverseKey;
+        Reverse = false;
     }
 
     public int CompareTo(Card card)
@@ -23,9 +27,9 @@ public class Card : IComparable<Card>, IEquatable<Card>
         return Rank + "/" + Suit;
     }
 
-    public virtual int GetSortValue()
+    public int GetSortValue()
     {
-        return SortKey;
+        return Reverse ? ReverseSortKey : SortKey;
     }
 
     public bool Equals(Card other)

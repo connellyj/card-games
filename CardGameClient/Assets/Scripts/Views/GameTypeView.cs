@@ -8,6 +8,7 @@ public class GameTypeView : MonoBehaviour
     public TMP_Dropdown GameTypeDropdown;
     public TextMeshProUGUI GameNameText;
     public Button ActionButton;
+    public Toggle ReverseCheckbox;
 
     void Start()
     {
@@ -25,5 +26,6 @@ public class GameTypeView : MonoBehaviour
         GameNameText.text = gameType;
         gameObject.SetActive(false);
         Client.Instance.SubmitGameType(gameType);
+        Client.Instance.SubmitSettings(ReverseCheckbox.isOn);
     }
 }

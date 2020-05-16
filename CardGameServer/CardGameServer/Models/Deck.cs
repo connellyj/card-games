@@ -12,7 +12,7 @@ namespace CardGameServer.Models
             {
                 foreach (string r in ranks)
                 {
-                    Card card = new Card(s, r, (suits.IndexOf(s) * 100) + ranks.IndexOf(r));
+                    Card card = new Card(s, r, (suits.IndexOf(s) * 100) + ranks.IndexOf(r), (suits.IndexOf(s) * 100) - ranks.IndexOf(r));
                     cards.Add(card);
                 }
             }

@@ -66,6 +66,15 @@ namespace CardGameServer
             Server.Instance().Send(GameInfoMap[PlayerGameTypeMap[uid]], uid);
         }
 
+        public static void HandleSettings(string uid, SettingsMessage settingsMessage)
+        {
+            GameManager gm = GetGameManager(uid);
+            if (gm != null)
+            {
+                gm.HandleSetting(uid, settingsMessage);
+            }
+        }
+
         public static void HandlePlayerDisconnect(string uid)
         {
             GameManager gm = GetGameManager(uid);
@@ -374,6 +383,11 @@ namespace CardGameServer
             }
         }
 
+        private void HandleSetting(string uid, SettingsMessage settingsMessage)
+        {
+            Players.Where(p => p.Uid == uid).Single().SortCardsInReverse = settingsMessage.SortReverse;
+        }
+
         private void Join(JoinMessage message, string uid)
         {
             if (!Players.Any(p => p.Name == message.UserName))
@@ -429,6 +443,13 @@ namespace CardGameServer
             foreach (Player p in Players)
             {
                 p.Cards = deck.Skip(idx * GetNumCardsInHand()).Take(GetNumCardsInHand()).ToList();
+                if (p.SortCardsInReverse)
+                {
+                    foreach (Card c in p.Cards)
+                    {
+                        c.Reverse = true;
+                    }
+                }
                 idx++;
                 Server.Instance().Send(new StartMessage(p.Cards.ToArray()), p.Uid);
             }
@@ -516,6 +537,7 @@ namespace CardGameServer
             {
                 p.ResetScores();
                 p.Cards = null;
+                p.SortCardsInReverse = false;
             }
         }
 
