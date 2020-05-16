@@ -17,6 +17,7 @@ namespace CardGameServer
         private static Dictionary<string, Dictionary<string, GameManager>> GameNameMap;
         private static Dictionary<string, string> PlayerGameNameMap;
         private static Dictionary<string, string> PlayerGameTypeMap;
+        private static Dictionary<string, bool> PlayerReverseMap;
 
         private static readonly List<string> Suits = new List<string>() { "C", "D", "S", "H" };
         private static readonly List<string> Ranks = new List<string>() { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
@@ -48,6 +49,7 @@ namespace CardGameServer
             };
             PlayerGameNameMap = new Dictionary<string, string>();
             PlayerGameTypeMap = new Dictionary<string, string>();
+            PlayerReverseMap = new Dictionary<string, bool>();
         }
 
         public static GameTypeMessage GetGameTypes()
@@ -68,11 +70,7 @@ namespace CardGameServer
 
         public static void HandleSettings(string uid, SettingsMessage settingsMessage)
         {
-            GameManager gm = GetGameManager(uid);
-            if (gm != null)
-            {
-                gm.HandleSetting(uid, settingsMessage);
-            }
+            PlayerReverseMap.Add(uid, settingsMessage.SortReverse);
         }
 
         public static void HandlePlayerDisconnect(string uid)
@@ -337,8 +335,7 @@ namespace CardGameServer
             GameNameMap[gameType].Remove(gameName);
             foreach (string p in PlayerGameNameMap.Where(kvp => kvp.Value == gameName).Select(kvp => kvp.Key).ToList())
             {
-                PlayerGameNameMap.Remove(p);
-                PlayerGameTypeMap.Remove(p);
+                RemovePlayer(p);
             }
         }
 
@@ -346,6 +343,7 @@ namespace CardGameServer
         {
             PlayerGameNameMap.Remove(uid);
             PlayerGameTypeMap.Remove(uid);
+            PlayerReverseMap.Remove(uid);
         }
 
         private static GameManager GetGameManager(string playerId)
@@ -381,11 +379,6 @@ namespace CardGameServer
                 RemovePlayer(player);
                 Broadcast(new DisconnectMessage(restartMessage.PlayerName, false));
             }
-        }
-
-        private void HandleSetting(string uid, SettingsMessage settingsMessage)
-        {
-            Players.Where(p => p.Uid == uid).Single().SortCardsInReverse = settingsMessage.SortReverse;
         }
 
         private void Join(JoinMessage message, string uid)
@@ -443,7 +436,7 @@ namespace CardGameServer
             foreach (Player p in Players)
             {
                 p.Cards = deck.Skip(idx * GetNumCardsInHand()).Take(GetNumCardsInHand()).ToList();
-                if (p.SortCardsInReverse)
+                if (PlayerReverseMap[p.Uid])
                 {
                     foreach (Card c in p.Cards)
                     {
@@ -537,7 +530,6 @@ namespace CardGameServer
             {
                 p.ResetScores();
                 p.Cards = null;
-                p.SortCardsInReverse = false;
             }
         }
 

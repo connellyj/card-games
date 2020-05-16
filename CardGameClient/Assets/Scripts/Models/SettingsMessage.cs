@@ -10,7 +10,7 @@
 
     public override bool IsValid()
     {
-        return Type == "Setiings";
+        return Type == "Settings";
     }
 
     protected override void SetType(string type)

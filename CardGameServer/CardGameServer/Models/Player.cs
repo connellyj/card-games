@@ -15,7 +15,6 @@ namespace CardGameServer.Models
         public int MissedBidBy;
         public int Order;
         public bool TookATrick;
-        public bool SortCardsInReverse;
 
         public Player(string gameName, string name, string uid, int order)
         {
@@ -23,7 +22,6 @@ namespace CardGameServer.Models
             Name = name;
             Uid = uid;
             Order = order;
-            SortCardsInReverse = false;
             ResetScores();
         }
 
