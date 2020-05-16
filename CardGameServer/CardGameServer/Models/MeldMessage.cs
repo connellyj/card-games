@@ -28,24 +28,6 @@ namespace CardGameServer.Models
             TotalPoints = totalPoints;
         }
 
-        public override string ToString()
-        {
-            List<string> meld = new List<string>();
-            if (AcesAround > 0) meld.Add("Aces Around x" + AcesAround.ToString());
-            if (KingsAround > 0) meld.Add("Kings Around x" + KingsAround.ToString());
-            if (QueensAround > 0) meld.Add("Queens Around x" + QueensAround.ToString());
-            if (JacksAround > 0) meld.Add("Jacks Around x" + JacksAround.ToString());
-            if (ClubsMarriage > 0) meld.Add("\u2663 Marriage x" + ClubsMarriage.ToString());
-            if (DiamondsMarriage > 0) meld.Add("\u2666 Marriage x" + DiamondsMarriage.ToString());
-            if (SpadesMarriage > 0) meld.Add("\u2660 Marriage x" + SpadesMarriage.ToString());
-            if (HeartsMarriage > 0) meld.Add("\u2665 Marriage x" + HeartsMarriage.ToString());
-            if (Pinochle > 0) meld.Add("Pinochle x" + Pinochle.ToString());
-            if (Run > 0) meld.Add("Run x" + Run.ToString());
-            if (TrumpNine > 0) meld.Add("9 x" + TrumpNine.ToString());
-            string meldStr = meld.Count > 0 ? string.Join(", ", meld) : "None :(";
-            return "Meld: " + meldStr + " for a total of " + TotalPoints.ToString() + " points";
-        }
-
         public override bool IsValid()
         {
             return Type == "Meld";

@@ -14,11 +14,6 @@
             Order = order;
         }
 
-        public override string ToString()
-        {
-            return "Joined game '" + GameName + "'";
-        }
-
         public override bool IsValid()
         {
             return Type == "Join";

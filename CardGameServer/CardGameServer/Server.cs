@@ -16,9 +16,12 @@ namespace CardGameServer
 
         private Server()
         {
-            SocketServer = new WebSocketServer(2000);
+            SocketServer = new WebSocketServer(2000)
+            {
+                KeepClean = false
+            };
             SocketServer.AddWebSocketService<Router>("/");
-            SocketServer.KeepClean = false;
+            SocketServer.WebSocketServices["/"].KeepClean = false;
             GameManager.Init();
         }
 
@@ -44,11 +47,13 @@ namespace CardGameServer
 
         public void Broadcast<Model>(Model message)
         {
+            LogSent(message);
             SocketServer.WebSocketServices["/"].Sessions.Broadcast(JsonConvert.SerializeObject(message));
         }
 
         public void Broadcast<Model>(Model message, IEnumerable<string> uids)
         {
+            LogSent(message);
             foreach (string uid in SocketServer.WebSocketServices["/"].Sessions.ActiveIDs.Intersect(uids))
             {
                 SocketServer.WebSocketServices["/"].Sessions.SendTo(JsonConvert.SerializeObject(message), uid);
@@ -57,7 +62,16 @@ namespace CardGameServer
 
         public void Send<Model>(Model message, string uid)
         {
-            SocketServer.WebSocketServices["/"].Sessions.SendTo(JsonConvert.SerializeObject(message), uid);
+            LogSent(message);
+            if (SocketServer.WebSocketServices["/"].Sessions.ActiveIDs.Any(s => s == uid))
+            {
+                SocketServer.WebSocketServices["/"].Sessions.SendTo(JsonConvert.SerializeObject(message), uid);
+            }
+        }
+
+        private void LogSent<Model>(Model message)
+        {
+            Console.WriteLine("    Sent: " + JsonConvert.SerializeObject(message));
         }
 
         private class Router : WebSocketBehavior
@@ -65,13 +79,18 @@ namespace CardGameServer
             protected override void OnMessage(MessageEventArgs e)
             {
                 string message = e.Data;
-                Console.WriteLine(message);
+                Console.WriteLine("Received: " + message);
                 HandleMessage(message);
             }
 
             protected override void OnOpen()
             {
                 Send(JsonConvert.SerializeObject(GameManager.GetGameTypes()));
+            }
+
+            protected override void OnClose(CloseEventArgs e)
+            {
+                GameManager.HandlePlayerDisconnect(ID);
             }
 
             private void HandleMessage(string message)

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using UnityEngine;
 
 public class ViewController : MonoBehaviour
@@ -14,8 +13,8 @@ public class ViewController : MonoBehaviour
     public BidView BidPopUp;
     public MeldView MeldSheet;
     public TrumpView TrumpPopUp;
-    public GameObject GameOverScreen;
-    public TextMeshProUGUI WinningPlayerText;
+    public GameOverView GameOverScreen;
+    public GameStoppedView StoppedScreen;
 
     public static ViewController Instance;
 
@@ -110,9 +109,15 @@ public class ViewController : MonoBehaviour
     {
         if (show)
         {
-            WinningPlayerText.text = winningPlayer;
+            GameOverScreen.SetWinningPlayer(winningPlayer);
         }
-        GameOverScreen.SetActive(show);
+        GameOverScreen.gameObject.SetActive(show);
+    }
+
+    public void StopGame(string playerName)
+    {
+        StoppedScreen.SetPlayerName(playerName);
+        StoppedScreen.gameObject.SetActive(true);
     }
 
     public void DoOnClear(Action action)

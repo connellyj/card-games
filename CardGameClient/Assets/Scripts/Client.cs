@@ -36,7 +36,8 @@ public class Client : MonoBehaviour
         PlayerOrderMap = new Dictionary<int, string>();
         StartInitialized = false;
 
-        Ws = new WebSocket("ws://18.217.141.221:2000");
+        Ws = new WebSocket("ws://localhost:2000");
+        //Ws = new WebSocket("ws://18.217.141.221:2000");
 
         Ws.OnOpen += (sender, e) =>
         {
@@ -111,7 +112,7 @@ public class Client : MonoBehaviour
 
     public void SubmitMeld(MeldMessage message)
     {
-        ViewController.Instance.UpdateLog(message.PlayerName, message.ToString());
+        ViewController.Instance.UpdateLog(message.PlayerName, MeldToString(message));
         ViewController.Instance.ShowMeldWindow(false);
         MessageServer(message);
     }
@@ -132,6 +133,13 @@ public class Client : MonoBehaviour
         {
             lock (MessageTasks)
             {
+                DisconnectMessage disconnectMessage = JsonConvert.DeserializeObject<DisconnectMessage>(message);
+                if (disconnectMessage.IsValid())
+                {
+                    HandleDisconnect(disconnectMessage);
+                    return;
+                }
+
                 JoinResponse joinResponse = JsonConvert.DeserializeObject<JoinResponse>(message);
                 if (joinResponse.IsValid())
                 {
@@ -251,6 +259,11 @@ public class Client : MonoBehaviour
         }
     }
 
+    private void HandleDisconnect(DisconnectMessage disconnectMessage)
+    {
+        ViewController.Instance.StopGame(disconnectMessage.PlayerName);
+    }
+
     private void HandleJoinResponse(JoinResponse joinResponse)
     {
         if (joinResponse.Success)
@@ -269,7 +282,7 @@ public class Client : MonoBehaviour
     private void HandleJoin(JoinMessage joinMessage)
     {
         PlayerOrderMap.Add(joinMessage.Order, joinMessage.UserName);
-        ViewController.Instance.UpdateLog(joinMessage.UserName, joinMessage.ToString());
+        ViewController.Instance.UpdateLog(joinMessage.UserName, "Joined game: '" + joinMessage.GameName + "'");
     }
 
     private void HandleStart(StartMessage message)
@@ -313,7 +326,8 @@ public class Client : MonoBehaviour
             }
             else
             {
-                ViewController.Instance.UpdateLog(bidMessage.PlayerName, bidMessage.ToString());
+                string bidStr = bidMessage.Bid == 0 ? "Pass" : string.Format("Bid {0}", bidMessage.Bid.ToString());
+                ViewController.Instance.UpdateLog(bidMessage.PlayerName, bidStr);
             }
         });
     }
@@ -321,7 +335,7 @@ public class Client : MonoBehaviour
     private void HandleKitty(KittyMessage kittyMessage)
     {
         ViewController.Instance.ShowCardsInKitty(kittyMessage.Kitty);
-        ViewController.Instance.UpdateLog(kittyMessage.ChoosingPlayer, kittyMessage.ToString());
+        ViewController.Instance.UpdateLog(kittyMessage.ChoosingPlayer, string.Format("Choosing {0} cards to discard...", kittyMessage.Kitty.Length));
         if (kittyMessage.ChoosingPlayer == PlayerName)
         {
             ViewController.Instance.EnableDiscardCardsInKitty(kittyMessage.Kitty.Length);
@@ -345,7 +359,8 @@ public class Client : MonoBehaviour
         else
         {
             ViewController.Instance.UpdateTrumpInfo(SuitUnicodeMap[trumpMessage.TrumpSuit]);
-            ViewController.Instance.UpdateLog(trumpMessage.ChoosingPlayer, trumpMessage.ToString() + SuitUnicodeMap[trumpMessage.TrumpSuit]);
+            string trumpStr = trumpMessage.TrumpSuit == string.Empty ? "Choosing trump..." : "Trump is: " + SuitUnicodeMap[trumpMessage.TrumpSuit];
+            ViewController.Instance.UpdateLog(trumpMessage.ChoosingPlayer, trumpStr);
         }
     }
 
@@ -365,7 +380,7 @@ public class Client : MonoBehaviour
         }
         else
         {
-            ViewController.Instance.UpdateLog(meldMessage.PlayerName, meldMessage.ToString());
+            ViewController.Instance.UpdateLog(meldMessage.PlayerName, MeldToString(meldMessage));
         }
     }
 
@@ -430,9 +445,27 @@ public class Client : MonoBehaviour
 
     private void MessageServer(Message message)
     {
-        if (Ws != null && Ws.IsAlive)
+        if (Ws.IsAlive)
         {
             Ws.Send(JsonConvert.SerializeObject(message));
         }
+    }
+
+    private string MeldToString(MeldMessage meldMessage)
+    {
+        List<string> meld = new List<string>();
+        if (meldMessage.AcesAround > 0) meld.Add("Aces Around x" + meldMessage.AcesAround.ToString());
+        if (meldMessage.KingsAround > 0) meld.Add("Kings Around x" + meldMessage.KingsAround.ToString());
+        if (meldMessage.QueensAround > 0) meld.Add("Queens Around x" + meldMessage.QueensAround.ToString());
+        if (meldMessage.JacksAround > 0) meld.Add("Jacks Around x" + meldMessage.JacksAround.ToString());
+        if (meldMessage.ClubsMarriage > 0) meld.Add(SuitUnicodeMap["C"] + " Marriage x" + meldMessage.ClubsMarriage.ToString());
+        if (meldMessage.DiamondsMarriage > 0) meld.Add(SuitUnicodeMap["D"] + " Marriage x" + meldMessage.DiamondsMarriage.ToString());
+        if (meldMessage.SpadesMarriage > 0) meld.Add(SuitUnicodeMap["S"] + " Marriage x" + meldMessage.SpadesMarriage.ToString());
+        if (meldMessage.HeartsMarriage > 0) meld.Add(SuitUnicodeMap["H"] + " Marriage x" + meldMessage.HeartsMarriage.ToString());
+        if (meldMessage.Pinochle > 0) meld.Add("Pinochle x" + meldMessage.Pinochle.ToString());
+        if (meldMessage.Run > 0) meld.Add("Run x" + meldMessage.Run.ToString());
+        if (meldMessage.TrumpNine > 0) meld.Add("9 x" + meldMessage.TrumpNine.ToString());
+        string meldStr = meld.Count > 0 ? string.Join(", ", meld) : "None :(";
+        return "Meld: " + meldStr + " for a total of " + meldMessage.TotalPoints.ToString() + " points";
     }
 }

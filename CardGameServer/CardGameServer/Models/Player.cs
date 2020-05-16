@@ -23,6 +23,11 @@ namespace CardGameServer.Models
             Uid = uid;
             Order = order;
             Score = 0;
+            ResetPerHandScores();
+        }
+
+        public void ResetPerHandScores()
+        {
             SecretScore = 0;
             MeldScore = 0;
             OldScore = 0;

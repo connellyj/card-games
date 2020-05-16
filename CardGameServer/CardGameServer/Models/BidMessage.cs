@@ -14,11 +14,6 @@
             Bid = bid;
         }
 
-        public override string ToString()
-        {
-            return Bid == 0 ? "Pass" : string.Format("Bid {0}", Bid.ToString());
-        }
-
         public override bool IsValid()
         {
             return Type == "Bid";

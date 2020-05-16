@@ -14,11 +14,6 @@ namespace CardGameServer.Models
             ChoosingPlayer = choosingPlayer;
         }
 
-        public override string ToString()
-        {
-            return string.Format("Choosing {0} cards to discard...", Kitty.Length);
-        }
-
         public override bool IsValid()
         {
             return Type == "Kitty";

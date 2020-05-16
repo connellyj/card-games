@@ -90,8 +90,6 @@ namespace CardGameServer
                 }
                 p.Score += p.SecretScore;
                 p.Score += p.MeldScore;
-                p.SecretScore = 0;
-                p.MeldScore = 0;
             }
         }
 

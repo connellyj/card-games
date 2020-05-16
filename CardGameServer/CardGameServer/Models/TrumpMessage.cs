@@ -12,11 +12,6 @@
             TrumpSuit = trump;
         }
 
-        public override string ToString()
-        {
-            return TrumpSuit == string.Empty ? "Choosing trump..." : "Trump is: " + TrumpSuit;
-        }
-
         public override bool IsValid()
         {
             return Type == "Trump";

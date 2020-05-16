@@ -61,7 +61,6 @@ namespace CardGameServer
                     {
                         p.Score += ALL_POINTS;
                     }
-                    p.SecretScore = 0;
                 }
             }
             else

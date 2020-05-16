@@ -62,6 +62,15 @@ namespace CardGameServer
             Server.Instance().Send(GameInfoMap[PlayerGameTypeMap[uid]], uid);
         }
 
+        public static void HandlePlayerDisconnect(string uid)
+        {
+            GameManager gm = GetGameManager(uid);
+            if (gm != null)
+            {
+                gm.HandleDisconnect(uid);
+            }
+        }
+
         public static void HandleJoin(string uid, JoinMessage message)
         {
             if (PlayerGameTypeMap.ContainsKey(uid))
@@ -216,7 +225,6 @@ namespace CardGameServer
             foreach (Player p in GetPlayers())
             {
                 p.Score += p.SecretScore;
-                p.SecretScore = 0;
             }
         }
 
@@ -269,6 +277,13 @@ namespace CardGameServer
             // Do nothing by default
         }
 
+        protected virtual void HandleDisconnect(string playerId)
+        {
+            string playerName = Players.Where(p => p.Uid == playerId).Single().Name;
+            Broadcast(new DisconnectMessage(playerName));
+            RemoveGameManager(GameNameMap[PlayerGameTypeMap[playerId]][PlayerGameNameMap[playerId]]);
+        }
+
         protected virtual void HandleKitty(KittyMessage kittyMessage)
         {
             // Do nothing by default
@@ -296,9 +311,14 @@ namespace CardGameServer
 
         private static void HandleGameOver(GameManager gm)
         {
+            RemoveGameManager(gm);
+        }
+
+        private static void RemoveGameManager(GameManager gm)
+        {
             string gameType = GameManagerMap.Where(kvp => kvp.Value == gm.GetType()).Select(kvp => kvp.Key).Single();
             string gameName = GameNameMap[gameType].Where(kvp => kvp.Value == gm).Select(kvp => kvp.Key).Single();
-            GameNameMap.Remove(gameName);
+            GameNameMap[gameType].Remove(gameName);
             foreach (string p in PlayerGameNameMap.Where(kvp => kvp.Value == gameName).Select(kvp => kvp.Key).ToList())
             {
                 PlayerGameNameMap.Remove(p);
@@ -443,7 +463,7 @@ namespace CardGameServer
             DoUpdateScores();
             foreach (Player p in Players)
             {
-                p.TookATrick = false;
+                p.ResetPerHandScores();
                 BroadcastScore(p.Name);
             }
         }
