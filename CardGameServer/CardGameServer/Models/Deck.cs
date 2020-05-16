@@ -17,8 +17,6 @@ namespace CardGameServer.Models
                 }
             }
 
-            return cards.ToArray();
-
             Random rnd = new Random();
             Card[] shuffledCards = new Card[cards.Count];
             for (int i = 0; i < shuffledCards.Length; i++)

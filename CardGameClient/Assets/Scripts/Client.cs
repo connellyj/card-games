@@ -36,8 +36,8 @@ public class Client : MonoBehaviour
         PlayerOrderMap = new Dictionary<int, string>();
         StartInitialized = false;
 
-        Ws = new WebSocket("ws://localhost:2000");
-        //Ws = new WebSocket("ws://18.217.141.221:2000");
+        //Ws = new WebSocket("ws://localhost:2000");
+        Ws = new WebSocket("ws://18.217.141.221:2000");
 
         Ws.OnOpen += (sender, e) =>
         {
@@ -88,9 +88,9 @@ public class Client : MonoBehaviour
         MessageServer(new GameTypeMessage(game: gameType));
     }
 
-    public void SubmitRestart()
+    public void SubmitRestart(bool newGame)
     {
-        MessageServer(new RestartMessage(PlayerName));
+        MessageServer(new RestartMessage(PlayerName, newGame));
     }
 
     public void SubmitJoinGame(string userName, string gameName=null)
@@ -273,14 +273,31 @@ public class Client : MonoBehaviour
 
     private void HandleDisconnect(DisconnectMessage disconnectMessage)
     {
-        ViewController.Instance.StopGame(disconnectMessage.PlayerName);
+        if (!disconnectMessage.ShouldDisableGame)
+        {
+            ViewController.Instance.UpdateLog(disconnectMessage.PlayerName, "Disconnected");
+            ViewController.Instance.DisableRestart();
+        }
+        else
+        {
+            ViewController.Instance.ShowStoppedGame(true, disconnectMessage.PlayerName);
+        }
     }
 
     private void HandleRestart(RestartMessage restartMessage)
     {
         ViewController.Instance.ClearGameLog();
         ViewController.Instance.ShowGameOverWindow(false);
-        ViewController.Instance.UpdateLog(restartMessage.PlayerName, "Restarted the game");
+        ViewController.Instance.ShowStoppedGame(false);
+        if (!restartMessage.NewGame)
+        {
+            ViewController.Instance.UpdateLog(restartMessage.PlayerName, "Restarted the game");
+        }
+        else
+        {
+            ViewController.Instance.ShowGameTypePopUp(true);
+            ViewController.Instance.ShowGameTable(false);
+        }
     }
 
     private void HandleJoinResponse(JoinResponse joinResponse)

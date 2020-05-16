@@ -12,6 +12,7 @@ namespace CardGameServer
         private int Dealer;
         private int Leader;
         private int CurPlayer;
+        private bool IsGameOver;
 
         private static Dictionary<string, Dictionary<string, GameManager>> GameNameMap;
         private static Dictionary<string, string> PlayerGameNameMap;
@@ -59,6 +60,7 @@ namespace CardGameServer
             PlayerGameTypeMap.Add(uid, gameTypeMessage.ChosenGame);
             IEnumerable<string> games = GameNameMap[PlayerGameTypeMap[uid]]
                 .Where(kvp => kvp.Value.GetNumPlayers() < kvp.Value.GetMinPlayers())
+                .Where(kvp => !kvp.Value.IsGameOver)
                 .Select(kvp => kvp.Key);
             Server.Instance().Send(new AvailableGamesMessage(games.ToArray()), uid);
             Server.Instance().Send(GameInfoMap[PlayerGameTypeMap[uid]], uid);
@@ -331,6 +333,12 @@ namespace CardGameServer
             }
         }
 
+        private static void RemovePlayer(string uid)
+        {
+            PlayerGameNameMap.Remove(uid);
+            PlayerGameTypeMap.Remove(uid);
+        }
+
         private static GameManager GetGameManager(string playerId)
         {
             if (PlayerGameNameMap.ContainsKey(playerId) && PlayerGameNameMap.ContainsKey(playerId) && GameNameMap[PlayerGameTypeMap[playerId]].ContainsKey(PlayerGameNameMap[playerId]))
@@ -345,16 +353,25 @@ namespace CardGameServer
 
         private void HandleDisconnect(string playerId)
         {
-            string playerName = Players.Where(p => p.Uid == playerId).Single().Name;
-            Broadcast(new DisconnectMessage(playerName));
-            RemoveGameManager(GameNameMap[PlayerGameTypeMap[playerId]][PlayerGameNameMap[playerId]]);
+            Player player = Players.Where(p => p.Uid == playerId).Single();
+            Broadcast(new DisconnectMessage(player.Name, !IsGameOver));
+            RemovePlayer(player);
         }
 
         private void HandleRestart(RestartMessage restartMessage)
         {
-            Broadcast(restartMessage);
-            Reset();
-            StartRound();
+            if (!restartMessage.NewGame)
+            {
+                Reset();
+                StartRound();
+            }
+            else
+            {
+                Player player = Players.Where(p => p.Name == restartMessage.PlayerName).Single();
+                Server.Instance().Send(restartMessage, player.Uid);
+                RemovePlayer(player);
+                Broadcast(new DisconnectMessage(restartMessage.PlayerName, false));
+            }
         }
 
         private void Join(JoinMessage message, string uid)
@@ -441,7 +458,7 @@ namespace CardGameServer
                 Players[winningPlayer].TookATrick = true;
                 DoTrick(CurTrick, Players[winningPlayer]);
 
-                if (player.Cards.Count == 14)  // UNCOMMENT!!
+                if (player.Cards.Count == 0)
                 {
                     DoLastTrick(winningPlayer);
 
@@ -451,6 +468,7 @@ namespace CardGameServer
                     if (Players.Any(p => p.Score >= GetWinningPointTotal()))
                     {
                         Broadcast(new GameOverMessage(GetGameWinningPlayer()));
+                        IsGameOver = true;
                         HandleGameOver(this);
                     }
                     else
@@ -493,10 +511,21 @@ namespace CardGameServer
             Dealer = 0;
             Leader = 0;
             CurPlayer = 0;
+            IsGameOver = false;
             foreach (Player p in Players)
             {
                 p.ResetScores();
                 p.Cards = null;
+            }
+        }
+
+        private void RemovePlayer(Player player)
+        {
+            Players.Remove(player);
+            RemovePlayer(player.Uid);
+            if (Players.Count == 0)
+            {
+                RemoveGameManager(this);
             }
         }
     }

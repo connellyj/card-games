@@ -83,6 +83,11 @@ public class ViewController : MonoBehaviour
         CreatePopUp.SetError(error);
     }
 
+    public void ShowGameTypePopUp(bool show)
+    {
+        GameTypePopUp.gameObject.SetActive(show);
+    }
+
     public void ShowGameTable(bool show)
     {
         GameTable.gameObject.SetActive(show);
@@ -121,10 +126,18 @@ public class ViewController : MonoBehaviour
         GameOverScreen.gameObject.SetActive(show);
     }
 
-    public void StopGame(string playerName)
+    public void DisableRestart()
     {
-        StoppedScreen.SetPlayerName(playerName);
-        StoppedScreen.gameObject.SetActive(true);
+        GameOverScreen.RestartButton.interactable = false;
+    }
+
+    public void ShowStoppedGame(bool show, string playerName=null)
+    {
+        if (show)
+        {
+            StoppedScreen.SetPlayerName(playerName);
+        }
+        StoppedScreen.gameObject.SetActive(show);
     }
 
     public void DoOnClear(Action action)
