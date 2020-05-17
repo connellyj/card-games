@@ -109,13 +109,6 @@ namespace CardGameServer
                     return;
                 }
 
-                SettingsMessage settingsMessage = JsonConvert.DeserializeObject<SettingsMessage>(message);
-                if (settingsMessage.IsValid())
-                {
-                    GameManager.HandleSettings(ID, settingsMessage);
-                    return;
-                }
-
                 JoinMessage joinMessage = JsonConvert.DeserializeObject<JoinMessage>(message);
                 if (joinMessage.IsValid())
                 {

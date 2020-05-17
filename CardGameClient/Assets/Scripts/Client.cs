@@ -19,10 +19,10 @@ public class Client : MonoBehaviour
     private static readonly string SystemString = "System";
     private static readonly Dictionary<string, string> SuitUnicodeMap = new Dictionary<string, string>()
     {
-        { "C", "<color=#" + GameView.BlackText + "><size=2em>\u2663</color>" },
-        { "D", "<color=#" + GameView.RedText + "><size=2em>\u2666</color>" },
-        { "S", "<color=#" + GameView.BlackText + "><size=2em>\u2660</color>" },
-        { "H", "<color=#" + GameView.RedText + "><size=2em>\u2665</color>" }
+        { "C", "<color=#" + GameView.BlackText + "><size=1.5em>\u2663</size></color>" },
+        { "D", "<color=#" + GameView.RedText + "><size=1.5em>\u2666</size></color>" },
+        { "S", "<color=#" + GameView.BlackText + "><size=1.5em>\u2660</size></color>" },
+        { "H", "<color=#" + GameView.RedText + "><size=1.5em>\u2665</size></color>" }
     };
 
     void Awake()
@@ -90,7 +90,7 @@ public class Client : MonoBehaviour
 
     public void SubmitSettings(bool reverse)
     {
-        MessageServer(new SettingsMessage(reverse));
+        ViewController.Instance.UpdateSort(reverse);
     }
 
     public void SubmitRestart(bool newGame)

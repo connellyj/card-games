@@ -54,6 +54,11 @@ public class ViewController : MonoBehaviour
         GameLog.SetInfo("Passing to", passingTo, 0);
     }
 
+    public void UpdateSort(bool reverse)
+    {
+        GameTable.SetSort(reverse);
+    }
+
     public void ClearInfo()
     {
         GameLog.ClearInfo();

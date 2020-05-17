@@ -6,7 +6,6 @@ public class Card : IComparable<Card>, IEquatable<Card>
     public string Rank;
     public int SortKey;
     public int ReverseSortKey;
-    public bool Reverse;
 
     public Card(string suit, string rank, int sortKey, int reverseKey)
     {
@@ -14,7 +13,6 @@ public class Card : IComparable<Card>, IEquatable<Card>
         Rank = rank;
         SortKey = sortKey;
         ReverseSortKey = reverseKey;
-        Reverse = false;
     }
 
     public int CompareTo(Card card)
@@ -29,7 +27,7 @@ public class Card : IComparable<Card>, IEquatable<Card>
 
     public int GetSortValue()
     {
-        return Reverse ? ReverseSortKey : SortKey;
+        return SortKey;
     }
 
     public bool Equals(Card other)

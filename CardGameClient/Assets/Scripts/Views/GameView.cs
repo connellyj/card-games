@@ -39,6 +39,7 @@ public class GameView : MonoBehaviour
     private List<CardView> SelectableCards;
     private int NumSelectable;
     private bool Selectable;
+    private bool SortReverse;
 
     // Card display details
     public static readonly string RedText = "FF0000";
@@ -61,6 +62,7 @@ public class GameView : MonoBehaviour
         PlayedViews = new List<CardView>();
         SelectedCards = new List<CardView>();
         SelectableCards = new List<CardView>();
+        SortReverse = false;
 
         // Card display details
         SuitMap = new Dictionary<string, Sprite>()
@@ -93,6 +95,11 @@ public class GameView : MonoBehaviour
         PassButton.onClick.AddListener(ResetButtonsAndSelections);
 
         ClearButton.onClick.AddListener(ClearPlayedCards);
+    }
+
+    public void SetSort(bool reverse)
+    {
+        SortReverse = reverse;
     }
 
     public bool IsClearEnabled()
@@ -230,10 +237,10 @@ public class GameView : MonoBehaviour
 
         // create new cards
         Vector3 location = FirstHandCard.transform.position;
-        foreach (Card card in cards.OrderBy(c => c))
+        foreach (Card card in cards.OrderBy(c => GetSortKey(c)))
         {
             CardView cv = CreateAndRegisterCardView(card, location);
-            location.x += GetCardSpacing(cv);
+            location.x += GetCardSpacing();
         }
     }
 
@@ -241,15 +248,20 @@ public class GameView : MonoBehaviour
     {
         // create new cards
         Vector3 location = FirstKittyCard.transform.position;
-        foreach (Card card in kitty.OrderBy(c => c))
+        foreach (Card card in kitty.OrderBy(c => GetSortKey(c)))
         {
             CardView cv = CreateAndRegisterCardView(card, location);
             KittyViews.Add(cv);
-            location.x += GetCardSpacing(cv);
+            location.x += GetCardSpacing();
         }
     }
 
-    private float GetCardSpacing(CardView cv)
+    private int GetSortKey(Card c)
+    {
+        return SortReverse ? c.ReverseSortKey : c.SortKey;
+    }
+
+    private float GetCardSpacing()
     {
         return SecondHandCard.transform.position.x - FirstHandCard.transform.position.x;
     }

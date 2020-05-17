@@ -17,7 +17,6 @@ namespace CardGameServer
         private static Dictionary<string, Dictionary<string, GameManager>> GameNameMap;
         private static Dictionary<string, string> PlayerGameNameMap;
         private static Dictionary<string, string> PlayerGameTypeMap;
-        private static Dictionary<string, bool> PlayerReverseMap;
 
         private static readonly List<string> Suits = new List<string>() { "C", "D", "S", "H" };
         private static readonly List<string> Ranks = new List<string>() { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
@@ -49,7 +48,6 @@ namespace CardGameServer
             };
             PlayerGameNameMap = new Dictionary<string, string>();
             PlayerGameTypeMap = new Dictionary<string, string>();
-            PlayerReverseMap = new Dictionary<string, bool>();
         }
 
         public static GameTypeMessage GetGameTypes()
@@ -66,11 +64,6 @@ namespace CardGameServer
                 .Select(kvp => kvp.Key);
             Server.Instance().Send(new AvailableGamesMessage(games.ToArray()), uid);
             Server.Instance().Send(GameInfoMap[PlayerGameTypeMap[uid]], uid);
-        }
-
-        public static void HandleSettings(string uid, SettingsMessage settingsMessage)
-        {
-            PlayerReverseMap.Add(uid, settingsMessage.SortReverse);
         }
 
         public static void HandlePlayerDisconnect(string uid)
@@ -348,7 +341,6 @@ namespace CardGameServer
         {
             PlayerGameNameMap.Remove(uid);
             PlayerGameTypeMap.Remove(uid);
-            PlayerReverseMap.Remove(uid);
         }
 
         private static GameManager GetGameManager(string playerId)
@@ -441,13 +433,6 @@ namespace CardGameServer
             foreach (Player p in Players)
             {
                 p.Cards = deck.Skip(idx * GetNumCardsInHand()).Take(GetNumCardsInHand()).ToList();
-                if (PlayerReverseMap[p.Uid])
-                {
-                    foreach (Card c in p.Cards)
-                    {
-                        c.Reverse = true;
-                    }
-                }
                 idx++;
                 Server.Instance().Send(new StartMessage(p.Cards.ToArray()), p.Uid);
             }
