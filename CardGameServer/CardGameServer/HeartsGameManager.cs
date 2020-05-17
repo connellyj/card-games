@@ -11,6 +11,7 @@ namespace CardGameServer
 
         private static readonly int ALL_POINTS = 26;
         private static readonly int NUM_TO_PASS = 3;
+        private static readonly int QUEENIE = 13;
         private static readonly int[] PASS_DIRS = new int[4] { 1, -1, 2, 0 };
 
         public HeartsGameManager() : base()
@@ -45,7 +46,7 @@ namespace CardGameServer
                 }
                 if (c.Suit == "S" && c.Rank == "Q")
                 {
-                    winningPlayer.SecretScore++;
+                    winningPlayer.SecretScore += QUEENIE;
                 }
             }
         }
