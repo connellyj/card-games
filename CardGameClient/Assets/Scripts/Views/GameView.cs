@@ -62,7 +62,6 @@ public class GameView : MonoBehaviour
         PlayedViews = new List<CardView>();
         SelectedCards = new List<CardView>();
         SelectableCards = new List<CardView>();
-        SortReverse = false;
 
         // Card display details
         SuitMap = new Dictionary<string, Sprite>()
