@@ -142,7 +142,7 @@ public class GameView : MonoBehaviour
 
     public void ShowCards(List<Card> cards)
     {
-        ResetCardsInHand(cards.OrderBy(c => c));
+        ResetCardsInHand(cards);
     }
 
     public void AddCards(List<Card> cards)
@@ -153,7 +153,7 @@ public class GameView : MonoBehaviour
 
     public void ShowKittyCards(IEnumerable<Card> kitty)
     {
-        AddKittyCards(kitty.OrderBy(c => c));
+        AddKittyCards(kitty);
     }
 
     public void ShowPlayedCard(Card card, string player, bool destroyExisting)
@@ -230,7 +230,7 @@ public class GameView : MonoBehaviour
 
         // create new cards
         Vector3 location = FirstHandCard.transform.position;
-        foreach (Card card in cards)
+        foreach (Card card in cards.OrderBy(c => c))
         {
             CardView cv = CreateAndRegisterCardView(card, location);
             location.x += GetCardSpacing(cv);
@@ -241,7 +241,7 @@ public class GameView : MonoBehaviour
     {
         // create new cards
         Vector3 location = FirstKittyCard.transform.position;
-        foreach (Card card in kitty)
+        foreach (Card card in kitty.OrderBy(c => c))
         {
             CardView cv = CreateAndRegisterCardView(card, location);
             KittyViews.Add(cv);
