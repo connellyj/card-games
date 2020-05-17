@@ -25,12 +25,6 @@ namespace CardGameServer
             return 4;
         }
 
-        protected override int DoSetStartingPlayer()
-        {
-            List<Player> players = GetPlayers();
-            return players.IndexOf(players.Where(p => p.Cards.Any(c => c.Suit == "C" && c.Rank == "2")).Single());
-        }
-
         protected override void DoStartRound(int dealer)
         {
             StartPass();
@@ -115,7 +109,9 @@ namespace CardGameServer
                         Server.Instance().Send(pm, passingToPlayer.Uid);
                     }
                 }
-                StartTurn(GetCurrentPlayerIndex(), true);
+                List<Player> players = GetPlayers();
+                int startingPlayer = players.IndexOf(players.Where(p => p.Cards.Any(c => c.Suit == "C" && c.Rank == "2")).Single());
+                StartTurn(startingPlayer, true);
             }
         }
 
@@ -134,7 +130,7 @@ namespace CardGameServer
                 PassMessages.Add(passMessage);
                 Server.Instance().Send(passMessage, players[i].Uid);
             }
-            CurPass++;
+            CurPass = (CurPass + 1) & PASS_DIRS.Length;
         }
     }
 }

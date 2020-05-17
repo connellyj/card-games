@@ -441,10 +441,13 @@ public class Client : MonoBehaviour
                 {
                     ViewController.Instance.UpdatePassingInfo(passMessage.PassingTo);
                     ViewController.Instance.EnablePass(passMessage.NumToPass);
+                    ViewController.Instance.UpdateLog(SystemString, "Everyone is choosing cards to pass...");
                 }
                 else
                 {
                     ViewController.Instance.AddCardsInHand(passMessage.PassedCards.ToList());
+                    string cards = string.Join(", ", passMessage.PassedCards.Select(c => c.Rank + SuitUnicodeMap[c.Suit]));
+                    ViewController.Instance.UpdateLog(passMessage.PassingPlayer, "Passed: " + cards);
                 }
             }
         });

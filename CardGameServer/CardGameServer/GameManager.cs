@@ -214,9 +214,14 @@ namespace CardGameServer
             return Players.Count;
         }
 
-        protected virtual int DoSetStartingPlayer()
+        protected virtual int DoSetRoundStartingPlayer()
         {
             return (Dealer + 1) % Players.Count;
+        }
+
+        protected virtual int DoSetTurnStartingPlayer()
+        {
+            return CurPlayer;
         }
 
         protected virtual void DoStartRound(int dealer)
@@ -425,7 +430,7 @@ namespace CardGameServer
         private void StartRound()
         {
             Deal();
-            CurPlayer = DoSetStartingPlayer();
+            CurPlayer = DoSetRoundStartingPlayer();
             DoStartRound(Dealer);
         }
 
