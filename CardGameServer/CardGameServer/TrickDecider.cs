@@ -67,7 +67,7 @@ namespace CardGameServer
 
         private static Card HighestInSuit(List<Card> trick, string suit)
         {
-            return trick.Where(c => c.Suit == suit).OrderBy(c => c).LastOrDefault();
+            return trick.Where(c => c.Suit == suit).OrderBy(c => c.SortKey).LastOrDefault();
         }
     }
 }

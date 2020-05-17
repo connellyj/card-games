@@ -227,7 +227,7 @@ namespace CardGameServer
         protected virtual int DoDecideTrick(List<Card> trick)
         {
             string suit = trick[0].Suit;
-            return trick.IndexOf(trick.Where(c => c.Suit == suit).OrderBy(c => c).Last());
+            return trick.IndexOf(trick.Where(c => c.Suit == suit).OrderBy(c => c.SortKey).Last());
         }
 
         protected virtual void DoTrick(List<Card> trick, Player winningPlayer)
