@@ -143,6 +143,13 @@ public class Client : MonoBehaviour
         {
             lock (MessageTasks)
             {
+                ErrorResponse errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(message);
+                if (errorResponse.IsValid())
+                {
+                    Debug.Log("ErrorResponse: " + errorResponse.ErrorMessage);
+                    return;
+                }
+
                 DisconnectMessage disconnectMessage = JsonConvert.DeserializeObject<DisconnectMessage>(message);
                 if (disconnectMessage.IsValid())
                 {
