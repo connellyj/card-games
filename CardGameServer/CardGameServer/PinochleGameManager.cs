@@ -6,6 +6,9 @@ namespace CardGameServer
 {
     public class PinochleGameManager : GameManager
     {
+        // ********** Static member variables ********** //
+
+        // Static meld point values
         public static readonly int MIN_BID = 20;
         public static readonly int ACES_AROUND = 10;
         public static readonly int KINGS_AROUND = 8;
@@ -19,19 +22,57 @@ namespace CardGameServer
         public static readonly int TRUMP_NINE = 1;
         public static readonly int TRUMP_RUN = 15;
 
-        private static readonly List<string> Suits = new List<string>() { "C", "D", "S", "H" };
-        private static readonly List<string> Ranks = new List<string>() { "9", "J", "Q", "K", "10", "A" };
+        // Number of suits in the deck
         public static readonly int NUM_SUITS = Suits.Count;
+
+        // Number of ranks in the deck
         public static readonly int NUM_RANKS = Ranks.Count;
 
+        // The number of players required to play
+        private static readonly int MIN_PLAYERS = 3;
+
+        // The number of cards in each players hand
+        private static readonly int NUM_CARDS_IN_HAND = 15;
+
+        // Static list of card suits
+        private static readonly List<string> Suits = new List<string>() { "C", "D", "S", "H" };
+
+        // Static list of card ranks
+        private static readonly List<string> Ranks = new List<string>() { "9", "J", "Q", "K", "10", "A" };
+
+
+        // ********** Member variables ********** //
+
+        // Cards in the current kitty
         private Card[] Kitty;
+
+        // Players that have passed the current bid
         private List<int> PassedPlayers;
 
+        // Current trump suit
         private string Trump;
+
+        // Last person to bid
         private int LastBidder;
+
+        // The current bid value
         private int CurBid;
+
+        // How many players have submitted meld
         private int NumMeld;
 
+        /// <summary>
+        /// Returns the mininum number of players required to start the game.
+        /// </summary>
+        /// <returns> Minimum number of players </returns>
+        public static new int MinPlayers()
+        {
+            return MIN_PLAYERS;
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public PinochleGameManager() : base()
         {
             PassedPlayers = new List<int>();
@@ -39,41 +80,90 @@ namespace CardGameServer
             NumMeld = 0;
         }
 
-        public static int MinPlayers()
+        /// <summary>
+        /// Shuffle a Pinochle deck
+        /// </summary>
+        /// <returns> Full shuffled list of Card </returns>
+        protected override Card[] DoShuffle()
         {
-            return 3;
+            List<string> doubleRank = new List<string>();
+            doubleRank.AddRange(Ranks);
+            doubleRank.AddRange(Ranks);
+            return Deck.Shuffle(Suits, doubleRank);
         }
 
+        /// <summary>
+        /// Put extra cards in the kitty
+        /// </summary>
+        /// <param name="cards"> Extra cards after dealing </param>
+        protected override void DoDealExtraCards(IEnumerable<Card> cards)
+        {
+            Kitty = cards.ToArray();
+        }
+
+        /// <summary>
+        /// Starts a round by starting the bid and sending out meld points
+        /// </summary>
+        /// <param name="dealer"> The index of the dealer </param>
         protected override void DoStartRound(int dealer)
         {
             StartBid(GetCurrentPlayer(), dealer);
             SendMeldPoints();
         }
 
-        protected override int DoDecideTrick(List<Card> trick)
+        /// <summary>
+        /// Get playable cards
+        /// </summary>
+        /// <param name="hand"> The player's hand </param>
+        /// <param name="trick"> The current trick </param>
+        /// <param name="isFirstTrick"> WHether this is the first trick of the round </param>
+        /// <returns></returns>
+        protected override Card[] DoGetValidCards(List<Card> hand, List<Card> trick, bool isFirstTrick)
         {
-            return TrickDecider.WinningCard(trick, Trump);
+            return PinochleTrickDecider.ValidCards(hand, trick, Trump).ToArray();
         }
 
-        protected override void DoTrick(List<Card> trick, Player winningPlayer)
+        /// <summary>
+        /// Decide a Pinochle trick
+        /// </summary>
+        /// <param name="trick"> Cards in the trick </param>
+        /// <returns> Index of the winning card </returns>
+        protected override int DoDecideTrick(List<Card> trick)
+        {
+            return PinochleTrickDecider.WinningCard(trick, Trump);
+        }
+
+        /// <summary>
+        /// When a trick is done, add points to players' scores
+        /// </summary>
+        /// <param name="trick"> The trick </param>
+        /// <param name="winningPlayer"> The player who won the trick </param>
+        protected override void DoScoreTrick(List<Card> trick, Player winningPlayer)
         {
             foreach (Card c in trick)
             {
-                if (TrickDecider.IsPoint(c))
+                if (PinochleTrickDecider.IsPoint(c))
                 {
                     winningPlayer.SecretScore++;
                 }
             }
         }
 
+        /// <summary>
+        /// Add point for last trick
+        /// </summary>
+        /// <param name="winningPlayer"> Player who won the last trick </param>
         protected override void DoLastTrick(int winningPlayer)
         {
-            // point for last trick
             GetPlayer(winningPlayer).SecretScore++;
         }
 
+        /// <summary>
+        /// Update scores
+        /// </summary>
         protected override void DoUpdateScores()
         {
+            // Handle player went set
             Player biddingPlayer = GetPlayer(LastBidder);
             if (biddingPlayer.SecretScore + biddingPlayer.MeldScore < CurBid)
             {
@@ -82,6 +172,8 @@ namespace CardGameServer
                 biddingPlayer.SecretScore = 0;
                 biddingPlayer.MeldScore = 0;
             }
+
+            // Update scores
             foreach (Player p in GetPlayers())
             {
                 if (!p.TookATrick)
@@ -93,75 +185,61 @@ namespace CardGameServer
             }
         }
 
-        protected override Card[] GetValidCards(List<Card> hand, List<Card> trick, bool isFirstTrick)
-        {
-            return TrickDecider.ValidCards(hand, trick, Trump).ToArray();
-        }
-
-        protected override string GetGameWinningPlayer()
-        {
-            return GetPlayers().OrderBy(p => p.Score).Last().Name;
-        }
-
-        protected override int GetWinningPointTotal()
-        {
-            return 100;
-        }
-
+        /// <summary>
+        /// Get minimum number of players required for a game
+        /// </summary>
+        /// <returns> Minimum number of players </returns>
         protected override int GetMinPlayers()
         {
             return MinPlayers();
         }
 
+        /// <summary>
+        /// Get the number of cards in a players hand
+        /// </summary>
+        /// <returns> Number of cards in a hand </returns>
         protected override int GetNumCardsInHand()
         {
-            return 15;
+            return NUM_CARDS_IN_HAND;
         }
 
-        protected override Card[] DealCards()
+        /// <summary>
+        /// Handle a BidMessage.
+        /// </summary>
+        /// <param name="bidMessage"></param>
+        protected override void HandleBid(BidMessage bidMessage)
         {
-            List<string> doubleRank = new List<string>();
-            doubleRank.AddRange(Ranks);
-            doubleRank.AddRange(Ranks);
-            return Deck.Shuffle(Suits, doubleRank);
-        }
+            // Broadcast bid to all players
+            Broadcast(bidMessage);
 
-        protected override void DealExtraCards(IEnumerable<Card> cards)
-        {
-            Kitty = cards.ToArray();
-        }
-
-        protected override void HandleBid(BidMessage message)
-        {
-            // broadcast bid to all players
-            Broadcast(message);
-
-            // parse bid
-            CurBid = message.Bid;
-            if (message.Bid != 0)
+            // Parse bid
+            CurBid = bidMessage.Bid;
+            if (bidMessage.Bid != 0)
             {
                 LastBidder = GetCurrentPlayerIndex();
             }
             else
             {
-                CurBid = message.CurBid;
+                CurBid = bidMessage.CurBid;
                 PassedPlayers.Add(GetCurrentPlayerIndex());
             }
 
-            // get next non-passed player
+            // Get next non-passed player
             NextPlayer();
             while (PassedPlayers.Contains(GetCurrentPlayerIndex()) && GetCurrentPlayerIndex() != LastBidder)
             {
                 NextPlayer();
             }
 
-            // initiate next turn
+            // Handle last bid
             if (GetCurrentPlayerIndex() == LastBidder)
             {
                 Broadcast(new BidMessage(GetCurrentPlayer().Name, CurBid, CurBid));
                 PassedPlayers = new List<int>();
                 StartKitty(GetCurrentPlayerIndex());
             }
+
+            // Initiate next bid
             else
             {
                 Player player = GetCurrentPlayer();
@@ -169,66 +247,95 @@ namespace CardGameServer
             }
         }
 
-        protected override void HandleKitty(KittyMessage message)
+        /// <summary>
+        /// Handle a KittyMessage
+        /// </summary>
+        /// <param name="kittyMessage"></param>
+        protected override void HandleKitty(KittyMessage kittyMessage)
         {
-            // update player model
+            // Update player model
             Player player = GetCurrentPlayer();
             player.Cards.AddRange(Kitty);
-            foreach (Card c in message.Kitty)
+            foreach (Card c in kittyMessage.Kitty)
             {
                 player.Cards.Remove(c);
-                if (TrickDecider.IsPoint(c))
+                if (PinochleTrickDecider.IsPoint(c))
                 {
                     player.SecretScore++;
                 }
             }
 
-            // initiate next turn
+            // Initiate trump round
             StartTrump(GetCurrentPlayerIndex());
         }
 
-        protected override void HandleTrump(TrumpMessage message)
+        /// <summary>
+        /// Handle a TrumpMessage.
+        /// </summary>
+        /// <param name="trumpMessage"></param>
+        protected override void HandleTrump(TrumpMessage trumpMessage)
         {
-            // broadcast to all players
-            Broadcast(message);
+            // Broadcast to all players
+            Broadcast(trumpMessage);
 
-            Trump = message.TrumpSuit;
+            // Set trump suit
+            Trump = trumpMessage.TrumpSuit;
 
-            // initiate next turn
-            StartMeld(message.TrumpSuit);
+            // Initiate meld round
+            StartMeld(trumpMessage.TrumpSuit);
         }
 
-        protected override void HandleMeld(MeldMessage message)
+        /// <summary>
+        /// Handle a MeldMessage
+        /// </summary>
+        /// <param name="meldMessage"></param>
+        protected override void HandleMeld(MeldMessage meldMessage)
         {
-            // broadcast to all players
-            Broadcast(message);
+            // Broadcast to all players
+            Broadcast(meldMessage);
 
+            // Start first trick if all meld is in
             NumMeld++;
-
-            // initiate next turn
             if (NumMeld == GetNumPlayers())
             {
                 NumMeld = 0;
-                StartTurn(LastBidder);
+                StartTrick(LastBidder);
             }
         }
 
+        /// <summary>
+        /// Start bidding round.
+        /// </summary>
+        /// <param name="player"> Player who should bid first </param>
+        /// <param name="dealer"> Current dealer </param>
         private void StartBid(Player player, int dealer)
         {
             LastBidder = dealer;
             Broadcast(new BidMessage(player.Name, MIN_BID));
         }
 
+        /// <summary>
+        /// Start kitty round.
+        /// </summary>
+        /// <param name="player"> Index of the player who got the kitty </param>
         private void StartKitty(int player)
         {
             Broadcast(new KittyMessage(Kitty, GetPlayer(player).Name));
         }
 
+        /// <summary>
+        /// Start trump round.
+        /// </summary>
+        /// <param name="player"> Index of the player who should bid first </param>
         private void StartTrump(int player)
         {
             Broadcast(new TrumpMessage(GetPlayer(player).Name));
         }
 
+        /// <summary>
+        /// Start meld round.
+        /// </summary>
+        /// <param name="trump"> Trump suit </param>
         private void StartMeld(string trump)
         {
             foreach (Player p in GetPlayers())
@@ -253,6 +360,9 @@ namespace CardGameServer
             }
         }
 
+        /// <summary>
+        /// Send out meld points.
+        /// </summary>
         private void SendMeldPoints()
         {
             MeldPointsMessage meldPoints = new MeldPointsMessage(ACES_AROUND, KINGS_AROUND, QUEENS_AROUND, JACKS_AROUND,

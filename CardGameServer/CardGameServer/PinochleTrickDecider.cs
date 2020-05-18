@@ -1,10 +1,9 @@
-﻿using CardGameServer.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace CardGameServer
 {
-    public static class TrickDecider
+    public static class PinochleTrickDecider
     {
         public static bool IsPoint(Card c)
         {

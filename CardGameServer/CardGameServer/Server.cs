@@ -22,7 +22,7 @@ namespace CardGameServer
             };
             SocketServer.AddWebSocketService<Router>("/");
             SocketServer.WebSocketServices["/"].KeepClean = false;
-            GameManager.Init();
+            GameManager.StaticInitialize();
         }
 
         ~Server()
