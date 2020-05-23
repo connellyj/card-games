@@ -76,16 +76,13 @@ namespace CardGameServer
         /// </summary>
         public static void StaticInitialize()
         {
-            lock (GameManagerMap)
+            GameNameMap = new Dictionary<string, Dictionary<string, GameManager>>
             {
-                GameNameMap = new Dictionary<string, Dictionary<string, GameManager>>
-                {
-                    { "Hearts", new Dictionary<string, GameManager>() },
-                    { "Pinochle", new Dictionary<string, GameManager>() }
-                };
-                PlayerGameNameMap = new Dictionary<string, string>();
-                PlayerGameTypeMap = new Dictionary<string, string>();
-            }
+                { "Hearts", new Dictionary<string, GameManager>() },
+                { "Pinochle", new Dictionary<string, GameManager>() }
+            };
+            PlayerGameNameMap = new Dictionary<string, string>();
+            PlayerGameTypeMap = new Dictionary<string, string>();
         }
 
         /// <summary>
