@@ -22,6 +22,12 @@ namespace CardGameServer
         public static readonly int TRUMP_NINE = 1;
         public static readonly int TRUMP_RUN = 15;
 
+        // Static list of card suits
+        private static readonly List<string> Suits = new List<string>() { "C", "D", "S", "H" };
+
+        // Static list of card ranks
+        private static readonly List<string> Ranks = new List<string>() { "9", "J", "Q", "K", "10", "A" };
+
         // Number of suits in the deck
         public static readonly int NUM_SUITS = Suits.Count;
 
@@ -33,12 +39,6 @@ namespace CardGameServer
 
         // The number of cards in each players hand
         private static readonly int NUM_CARDS_IN_HAND = 15;
-
-        // Static list of card suits
-        private static readonly List<string> Suits = new List<string>() { "C", "D", "S", "H" };
-
-        // Static list of card ranks
-        private static readonly List<string> Ranks = new List<string>() { "9", "J", "Q", "K", "10", "A" };
 
 
         // ********** Member variables ********** //
