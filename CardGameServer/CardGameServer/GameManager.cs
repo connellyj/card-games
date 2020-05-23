@@ -76,13 +76,16 @@ namespace CardGameServer
         /// </summary>
         public static void StaticInitialize()
         {
-            GameNameMap = new Dictionary<string, Dictionary<string, GameManager>>
+            lock (GameManagerMap)
             {
-                { "Hearts", new Dictionary<string, GameManager>() },
-                { "Pinochle", new Dictionary<string, GameManager>() }
-            };
-            PlayerGameNameMap = new Dictionary<string, string>();
-            PlayerGameTypeMap = new Dictionary<string, string>();
+                GameNameMap = new Dictionary<string, Dictionary<string, GameManager>>
+                {
+                    { "Hearts", new Dictionary<string, GameManager>() },
+                    { "Pinochle", new Dictionary<string, GameManager>() }
+                };
+                PlayerGameNameMap = new Dictionary<string, string>();
+                PlayerGameTypeMap = new Dictionary<string, string>();
+            }
         }
 
         /// <summary>
@@ -91,7 +94,10 @@ namespace CardGameServer
         /// <returns> Minimum number of players </returns>
         public static int MinPlayers()
         {
-            return MIN_PLAYERS;
+            lock (GameManagerMap)
+            {
+                return MIN_PLAYERS;
+            }
         }
 
         /// <summary>
@@ -100,7 +106,10 @@ namespace CardGameServer
         /// <returns> All game types </returns>
         public static GameTypeMessage GetGameTypes()
         {
-            return new GameTypeMessage(GameManagerMap.Select(kvp => kvp.Key).ToArray());
+            lock (GameManagerMap)
+            {
+                return new GameTypeMessage(GameManagerMap.Select(kvp => kvp.Key).ToArray());
+            }
         }
 
         /// <summary>
@@ -110,12 +119,15 @@ namespace CardGameServer
         /// <param name="gameTypeMessage"></param>
         public static void HandleGameTypes(string uid, GameTypeMessage gameTypeMessage)
         {
-            // Add to game type map
-            PlayerGameTypeMap.Add(uid, gameTypeMessage.ChosenGame);
+            lock (GameManagerMap)
+            {
+                // Add to game type map
+                PlayerGameTypeMap.Add(uid, gameTypeMessage.ChosenGame);
 
-            // Send AvailableGames and GameInfo messages
-            Server.Instance().Send(GetAvailableGames(PlayerGameTypeMap[uid]), uid);
-            Server.Instance().Send(GameInfoMap[PlayerGameTypeMap[uid]], uid);
+                // Send AvailableGames and GameInfo messages
+                Server.Instance().Send(GetAvailableGames(PlayerGameTypeMap[uid]), uid);
+                Server.Instance().Send(GameInfoMap[PlayerGameTypeMap[uid]], uid);
+            }
         }
 
         /// <summary>
@@ -125,27 +137,30 @@ namespace CardGameServer
         /// <param name="joinMessage"></param>
         public static void HandleJoin(string uid, JoinMessage joinMessage)
         {
-            if (PlayerGameTypeMap.ContainsKey(uid))
+            lock (GameManagerMap)
             {
-                if (GameNameMap[PlayerGameTypeMap[uid]].ContainsKey(joinMessage.GameName))
+                if (PlayerGameTypeMap.ContainsKey(uid))
                 {
-                    // The game exists, so join it
-                    GameNameMap[PlayerGameTypeMap[uid]][joinMessage.GameName].Join(joinMessage, uid);
+                    if (GameNameMap[PlayerGameTypeMap[uid]].ContainsKey(joinMessage.GameName))
+                    {
+                        // The game exists, so join it
+                        GameNameMap[PlayerGameTypeMap[uid]][joinMessage.GameName].Join(joinMessage, uid);
+                    }
+                    else
+                    {
+                        // The game doesn't exist, so make a new one and join it
+                        GameManager gm = (GameManager)Activator.CreateInstance(GameManagerMap[PlayerGameTypeMap[uid]]);
+                        GameNameMap[PlayerGameTypeMap[uid]].Add(joinMessage.GameName, gm);
+                        gm.Join(joinMessage, uid);
+
+                        // Broadcast available games
+                        BroadcastAvailableGames(PlayerGameTypeMap[uid]);
+                    }
                 }
                 else
                 {
-                    // The game doesn't exist, so make a new one and join it
-                    GameManager gm = (GameManager)Activator.CreateInstance(GameManagerMap[PlayerGameTypeMap[uid]]);
-                    GameNameMap[PlayerGameTypeMap[uid]].Add(joinMessage.GameName, gm);
-                    gm.Join(joinMessage, uid);
-
-                    // Broadcast available games
-                    BroadcastAvailableGames(PlayerGameTypeMap[uid]);
+                    Server.Instance().Send(new ErrorResponse("A GameTypeMessage must be sent before a JoinMessage."), uid);
                 }
-            }
-            else
-            {
-                Server.Instance().Send(new ErrorResponse("A GameTypeMessage must be sent before a JoinMessage."), uid);
             }
         }
 
@@ -155,10 +170,13 @@ namespace CardGameServer
         /// <param name="uid"> The uid of the player </param>
         public static void HandlePlayerDisconnect(string uid)
         {
-            GameManager gm = GetGameManager(uid);
-            if (gm != null)
+            lock (GameManagerMap)
             {
-                gm.HandleDisconnect(uid);
+                GameManager gm = GetGameManager(uid);
+                if (gm != null)
+                {
+                    gm.HandleDisconnect(uid);
+                }
             }
         }
 
@@ -169,10 +187,13 @@ namespace CardGameServer
         /// <param name="restartMessage"></param>
         public static void HandleRestart(string playerUid, RestartMessage restartMessage)
         {
-            GameManager gm = GetGameManager(playerUid);
-            if (gm != null)
+            lock (GameManagerMap)
             {
-                gm.HandleRestart(restartMessage);
+                GameManager gm = GetGameManager(playerUid);
+                if (gm != null)
+                {
+                    gm.HandleRestart(restartMessage);
+                }
             }
         }
 
@@ -183,10 +204,13 @@ namespace CardGameServer
         /// <param name="bidMessage"></param>
         public static void HandleBid(string playerId, BidMessage bidMessage)
         {
-            GameManager gm = GetGameManager(playerId);
-            if (gm != null)
+            lock (GameManagerMap)
             {
-                gm.HandleBid(bidMessage);
+                GameManager gm = GetGameManager(playerId);
+                if (gm != null)
+                {
+                    gm.HandleBid(bidMessage);
+                }
             }
         }
 
@@ -197,10 +221,13 @@ namespace CardGameServer
         /// <param name="kittyMessage"></param>
         public static void HandleKitty(string playerId, KittyMessage kittyMessage)
         {
-            GameManager gm = GetGameManager(playerId);
-            if (gm != null)
+            lock (GameManagerMap)
             {
-                gm.HandleKitty(kittyMessage);
+                GameManager gm = GetGameManager(playerId);
+                if (gm != null)
+                {
+                    gm.HandleKitty(kittyMessage);
+                }
             }
         }
 
@@ -211,10 +238,13 @@ namespace CardGameServer
         /// <param name="trumpMessage"></param>
         public static void HandleTrump(string playerId, TrumpMessage trumpMessage)
         {
-            GameManager gm = GetGameManager(playerId);
-            if (gm != null)
+            lock (GameManagerMap)
             {
-                gm.HandleTrump(trumpMessage);
+                GameManager gm = GetGameManager(playerId);
+                if (gm != null)
+                {
+                    gm.HandleTrump(trumpMessage);
+                }
             }
         }
 
@@ -225,10 +255,13 @@ namespace CardGameServer
         /// <param name="meldMessage"></param>
         public static void HandleMeld(string playerId, MeldMessage meldMessage)
         {
-            GameManager gm = GetGameManager(playerId);
-            if (gm != null)
+            lock (GameManagerMap)
             {
-                gm.HandleMeld(meldMessage);
+                GameManager gm = GetGameManager(playerId);
+                if (gm != null)
+                {
+                    gm.HandleMeld(meldMessage);
+                }
             }
         }
 
@@ -239,10 +272,13 @@ namespace CardGameServer
         /// <param name="passMessage"></param>
         public static void HandlePass(string playerId, PassMessage passMessage)
         {
-            GameManager gm = GetGameManager(playerId);
-            if (gm != null)
+            lock (GameManagerMap)
             {
-                gm.HandlePass(passMessage);
+                GameManager gm = GetGameManager(playerId);
+                if (gm != null)
+                {
+                    gm.HandlePass(passMessage);
+                }
             }
         }
 
@@ -253,10 +289,13 @@ namespace CardGameServer
         /// <param name="turnMessage"></param>
         public static void HandleTurn(string playerId, TurnMessage turnMessage)
         {
-            GameManager gm = GetGameManager(playerId);
-            if (gm != null)
+            lock (GameManagerMap)
             {
-                gm.HandleTurn(turnMessage);
+                GameManager gm = GetGameManager(playerId);
+                if (gm != null)
+                {
+                    gm.HandleTurn(turnMessage);
+                }
             }
         }
 

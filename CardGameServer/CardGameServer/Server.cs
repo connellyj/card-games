@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using CardGameServer.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -91,6 +90,11 @@ namespace CardGameServer
             protected override void OnClose(CloseEventArgs e)
             {
                 GameManager.HandlePlayerDisconnect(ID);
+            }
+
+            protected override void OnError(ErrorEventArgs e)
+            {
+                Console.WriteLine("WebSocket error: " + e.Message);
             }
 
             private void HandleMessage(string message)
