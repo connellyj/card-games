@@ -408,13 +408,22 @@ public class Client : MonoBehaviour
             ViewController.Instance.UpdateLog(trumpMessage.ChoosingPlayer, "Choosing trump...");
             if (trumpMessage.ChoosingPlayer == PlayerName)
             {
+                if (trumpMessage.ExtraOptions != null)
+                {
+                    ViewController.Instance.UpdateExtraTrumpOptions(trumpMessage.ExtraOptions);
+                }
+                if (trumpMessage.UnavailableOptions != null)
+                {
+                    ViewController.Instance.UpdateDisabledTrumpOptions(trumpMessage.UnavailableOptions);
+                }
                 ViewController.Instance.ShowTrumpWindow(true);
             }
         }
         else
         {
-            ViewController.Instance.UpdateTrumpInfo(SuitUnicodeMap[trumpMessage.TrumpSuit]);
-            string trumpStr = trumpMessage.TrumpSuit == string.Empty ? "Choosing trump..." : "Trump is: " + SuitUnicodeMap[trumpMessage.TrumpSuit];
+            string trumpOption = SuitUnicodeMap.ContainsKey(trumpMessage.TrumpSuit) ? SuitUnicodeMap[trumpMessage.TrumpSuit] : trumpMessage.TrumpSuit;
+            ViewController.Instance.UpdateTrumpInfo(trumpOption);
+            string trumpStr = trumpMessage.TrumpSuit == string.Empty ? "Choosing trump..." : "Trump is: " + trumpOption;
             ViewController.Instance.UpdateLog(trumpMessage.ChoosingPlayer, trumpStr);
         }
     }

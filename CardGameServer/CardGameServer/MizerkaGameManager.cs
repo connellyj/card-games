@@ -61,7 +61,7 @@ namespace CardGameServer
         {
             Player p = GetPlayer(dealer);
             Server.Instance().Send(new StartMessage(p.Cards.Take(5).ToArray()), p.Uid);
-            Broadcast(new TrumpMessage(p.Name, availableOptions: TrumpOptions.Except(p.TrumpUsed).ToArray(), extraOptions: ExtraTrumpOptions));
+            Broadcast(new TrumpMessage(p.Name, unavailableOptions: p.TrumpUsed.ToArray(), extraOptions: ExtraTrumpOptions));
         }
 
         /// <summary>

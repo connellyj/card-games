@@ -59,6 +59,16 @@ public class ViewController : MonoBehaviour
         GameTable.SetSort(reverse);
     }
 
+    public void UpdateExtraTrumpOptions(string[] extraOptions)
+    {
+        TrumpPopUp.AddExtraOptions(extraOptions);
+    }
+
+    public void UpdateDisabledTrumpOptions(string[] options)
+    {
+        TrumpPopUp.DisableOptions(options);
+    }
+
     public void ClearInfo()
     {
         GameLog.ClearInfo();
