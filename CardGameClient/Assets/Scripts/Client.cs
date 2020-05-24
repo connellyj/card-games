@@ -58,6 +58,7 @@ public class Client : MonoBehaviour
         {
             string message = e.Data;
             Debug.Log("Server: " + message);
+            ViewController.Instance.UpdateLog("DEBUG", message);
             lock (MessageTasks)
             {
                 MessageTasks.Enqueue(new Task(() => HandleMessage(message)));
