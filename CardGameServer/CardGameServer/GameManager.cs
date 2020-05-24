@@ -465,7 +465,7 @@ namespace CardGameServer
             CurPlayer = leader;
             Player player = Players[CurPlayer];
             CurTrick = new List<Card>();
-            Card[] validCards = isFirstTrick ? DoGetFirstTrickValidCards(player.Cards) : player.Cards.ToArray();
+            Card[] validCards = isFirstTrick ? DoGetFirstTrickValidCards(player.Cards) : DoGetTrickStartValidCards(player.Cards);
             Broadcast(new TurnMessage(player.Name, validCards, isFirstCard: true));
         }
 
@@ -502,13 +502,25 @@ namespace CardGameServer
         }
 
         /// <summary>
-        /// By default, return the entire hand
-        /// Called when the first trick of a round is started
+        /// By default, return the entire hand.
+        /// Called when the first trick of a round is started.
         /// Subclasses should override to enable different behaviors.
         /// </summary>
         /// <param name="hand"> The players cards </param>
         /// <returns> The valid cards that can be played </returns>
         protected virtual Card[] DoGetFirstTrickValidCards(List<Card> hand)
+        {
+            return DoGetTrickStartValidCards(hand);
+        }
+
+        /// <summary>
+        /// By default, return the entire hand.
+        /// Called when a trick is started.
+        /// Subclasses should override to enable different behaviors.
+        /// </summary>
+        /// <param name="hand"> The players cards </param>
+        /// <returns> The valid cards that can be played </returns>
+        protected virtual Card[] DoGetTrickStartValidCards(List<Card> hand)
         {
             return hand.ToArray();
         }
@@ -870,8 +882,8 @@ namespace CardGameServer
             DoUpdateScores();
             foreach (Player p in Players)
             {
-                p.ResetPerHandScores();
                 BroadcastScore(p.Name);
+                p.ResetPerHandScores();
             }
         }
 

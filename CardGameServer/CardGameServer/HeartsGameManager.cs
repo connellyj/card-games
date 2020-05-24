@@ -29,6 +29,9 @@ namespace CardGameServer
         // Index of the current pass direction
         private int CurPass;
 
+        // Whether points have been broken
+        private bool ArePointsBroken;
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -55,6 +58,23 @@ namespace CardGameServer
         protected override Card[] DoGetFirstTrickValidCards(List<Card> hand)
         {
             return hand.Where(c => c.Rank == "2" && c.Suit == "C").ToArray();
+        }
+
+        /// <summary>
+        /// Can't lead hearts if they haven't been broken
+        /// </summary>
+        /// <param name="hand"> The players cards </param>
+        /// <returns> The valid cards that can be played </returns>
+        protected override Card[] DoGetTrickStartValidCards(List<Card> hand)
+        {
+            if (ArePointsBroken)
+            {
+                return hand.ToArray();
+            }
+            else
+            {
+                return hand.Where(c => c.Suit != "H" && !(c.Suit == "S" && c.Rank == "Q")).ToArray();
+            }
         }
 
         /// <summary>
@@ -91,10 +111,12 @@ namespace CardGameServer
                 if (c.Suit == "H")
                 {
                     winningPlayer.SecretScore++;
+                    ArePointsBroken = true;
                 }
                 if (c.Suit == "S" && c.Rank == "Q")
                 {
                     winningPlayer.SecretScore += QUEENIE;
+                    ArePointsBroken = true;
                 }
             }
         }
