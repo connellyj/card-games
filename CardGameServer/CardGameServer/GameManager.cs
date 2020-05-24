@@ -823,7 +823,7 @@ namespace CardGameServer
                 DoScoreTrick(CurTrick, Players[winningPlayer]);
 
                 // Handle last trick
-                if (player.Cards.Count == 12)
+                if (player.Cards.Count == 11)
                 {
                     DoLastTrick(winningPlayer);
                     UpdateAndBroadcastAllScores();
