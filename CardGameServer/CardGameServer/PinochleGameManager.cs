@@ -174,7 +174,7 @@ namespace CardGameServer
             // Update scores
             foreach (Player p in GetPlayers())
             {
-                if (!p.TookATrick)
+                if (p.TricksTaken == 0)
                 {
                     p.MeldScore = 0;
                 }

@@ -15,7 +15,7 @@ namespace CardGameServer.Models
         public int OldScore;
         public int MissedBidBy;
         public int Order;
-        public bool TookATrick;
+        public int TricksTaken;
 
         public Player(string gameName, string name, string uid, int order)
         {
@@ -32,7 +32,7 @@ namespace CardGameServer.Models
             MeldScore = 0;
             OldScore = 0;
             MissedBidBy = 0;
-            TookATrick = false;
+            TricksTaken = 0;
         }
 
         public void ResetScores()

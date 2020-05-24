@@ -385,6 +385,15 @@ namespace CardGameServer
         }
 
         /// <summary>
+        /// Get the index of the dealer.
+        /// </summary>
+        /// <returns> Index of the dealer </returns>
+        protected int GetDealerIndex()
+        {
+            return Dealer;
+        }
+
+        /// <summary>
         /// Get the index of the current player.
         /// </summary>
         /// <returns> Index of the current player </returns>
@@ -840,21 +849,20 @@ namespace CardGameServer
 
             // Update CurPlayer
             NextPlayer();
-            Player player = Players[CurPlayer];
 
             // Handle all players have played
             if (CurPlayer == Leader)
             {
-                // Broadcast trick end to all players
-                Broadcast(new TrickMessage(player.Name));
-
                 // Handle trick end
                 int winningPlayer = (Leader + DoDecideTrick(CurTrick)) % Players.Count;
-                Players[winningPlayer].TookATrick = true;
+                Players[winningPlayer].TricksTaken++;
                 DoScoreTrick(CurTrick, Players[winningPlayer]);
 
+                // Broadcast trick end to all players
+                Broadcast(new TrickMessage(Players[winningPlayer].Name));
+
                 // Handle last trick
-                if (player.Cards.Count == 0)
+                if (Players.All(p => p.Cards.Count == 0))
                 {
                     DoLastTrick(winningPlayer);
                     UpdateAndBroadcastAllScores();
@@ -884,7 +892,8 @@ namespace CardGameServer
             // Handle next turn in trick
             else
             {
-                bool isFirst = !Players.Any(p => p.TookATrick);
+                bool isFirst = !Players.Any(p => p.TricksTaken > 0);
+                Player player = Players[CurPlayer];
                 Server.Instance().Send(new TurnMessage(player.Name, DoGetValidCards(player.Cards, CurTrick, isFirst)), player.Uid);
             }
         }

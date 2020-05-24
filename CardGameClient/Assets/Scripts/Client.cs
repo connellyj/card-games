@@ -264,7 +264,14 @@ public class Client : MonoBehaviour
                 TrickMessage trickMessage = JsonConvert.DeserializeObject<TrickMessage>(message);
                 if (trickMessage.IsValid())
                 {
-                    ViewController.Instance.EnableClearPlayedCards();
+                    HandleTrick(trickMessage);
+                    return;
+                }
+
+                TrickInfoMessage trickInfoMessage = JsonConvert.DeserializeObject<TrickInfoMessage>(message);
+                if (trickInfoMessage.IsValid())
+                {
+                    HandleTrickInfo(trickInfoMessage);
                     return;
                 }
 
@@ -458,6 +465,19 @@ public class Client : MonoBehaviour
                 }
             }
         });
+    }
+
+    private void HandleTrick(TrickMessage trickMessage)
+    {
+        ViewController.Instance.EnableClearPlayedCards();
+    }
+
+    private void HandleTrickInfo(TrickInfoMessage trickInfoMessage)
+    {
+        foreach (string key in trickInfoMessage.TricksLeft.Keys)
+        {
+            ViewController.Instance.UpdateLog(key, "Needs " + trickInfoMessage.TricksLeft[key].ToString() + " more tricks");
+        }
     }
 
     private void HandleTurn(TurnMessage turnMessage)

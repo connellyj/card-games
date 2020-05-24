@@ -1,4 +1,5 @@
 ﻿using CardGameServer.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,10 +13,13 @@ namespace CardGameServer
         private static readonly int MIN_PLAYERS = 3;
 
         // Extra options for "trump"
-        private static string[] ExtraTrumpOptions = new string[2] { "No Trump", "Mizerka" };
+        private static readonly string[] ExtraTrumpOptions = new string[2] { "No Trump", "Mizerka" };
 
         // All options for trump
-        private static List<string> TrumpOptions = new List<string>(GetSuits().Union(ExtraTrumpOptions));
+        private static readonly List<string> TrumpOptions = new List<string>(GetSuits().Union(ExtraTrumpOptions));
+
+        // Number of tricks required to break even
+        private static readonly int[] TricksNeeded = new int[3] { 7, 5, 1 };
 
 
         // ********** Member variables ********** //
@@ -61,13 +65,13 @@ namespace CardGameServer
         }
 
         /// <summary>
-        /// Add a point for the trick taken
+        /// TricksTaken used for scoring, so just send out trick info
         /// </summary>
         /// <param name="trick"> The completed trick </param>
         /// <param name="winningPlayer"> The index of the player that won the trick </param>
         protected override void DoScoreTrick(List<Card> trick, Player winningPlayer)
         {
-            winningPlayer.SecretScore++;
+            SendTrickInfo();
         }
 
         /// <summary>
@@ -75,8 +79,13 @@ namespace CardGameServer
         /// </summary>
         protected override void DoUpdateScores()
         {
-            // TODO UPDATE SCORES
-            // TODO SEND HOW MANY TRICKS PLAYERS NEED TO TAKE
+            List<Player> players = GetPlayers();
+            int dealer = GetDealerIndex();
+            for (int i = 0; i < players.Count; i++)
+            {
+                int tricksLeft = GetTricksNeeded(i, dealer);
+                players[i].Score -= tricksLeft;
+            }
         }
 
         /// <summary>
@@ -94,11 +103,50 @@ namespace CardGameServer
         /// <param name="trumpMessage"></param>
         protected override void HandleTrump(TrumpMessage trumpMessage)
         {
+            // Broadcast to all players
             Broadcast(trumpMessage);
+
+            // Save trump and update player model
             Trump = trumpMessage.TrumpSuit;
+            Player choosingPlayer = GetPlayers().Where(p => p.Name == trumpMessage.ChoosingPlayer).Single();
+            choosingPlayer.TrumpUsed.Add(trumpMessage.TrumpSuit);
+
+            // Send out cards and start first trick
             SendPlayerHands();
+            SendTrickInfo();
+            StartTrick(GetDealerIndex());
+        }
+
+        /// <summary>
+        /// Helper method to send TrickInfoMessage
+        /// </summary>
+        private void SendTrickInfo()
+        {
             List<Player> players = GetPlayers();
-            StartTrick(players.IndexOf(players.Where(p => p.Name == trumpMessage.ChoosingPlayer).Single()));
+            int dealer = GetDealerIndex();
+            Dictionary<string, int> trickInfo = new Dictionary<string, int>();
+            for (int i = 0; i < players.Count; i++)
+            {
+                int tricksLeft = GetTricksNeeded(i, dealer);
+                trickInfo.Add(players[i].Name, tricksLeft);
+            }
+            Broadcast(new TrickInfoMessage(trickInfo));
+        }
+
+        /// <summary>
+        /// Helper method to get number of tricks still needed to break even
+        /// </summary>
+        /// <param name="playerIndex"></param>
+        /// <param name="dealerIndex"></param>
+        /// <returns></returns>
+        private int GetTricksNeeded(int playerIndex, int dealerIndex)
+        {
+            int idx = playerIndex - dealerIndex;
+            if (idx < 0)
+            {
+                idx = TricksNeeded.Length + idx;
+            }
+            return TricksNeeded[idx] - GetPlayer(playerIndex).TricksTaken;
         }
     }
 }
