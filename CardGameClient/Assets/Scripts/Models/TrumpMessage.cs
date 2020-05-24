@@ -2,12 +2,16 @@
 {
     public string TrumpSuit;
     public string ChoosingPlayer;
+    public string[] AvailableOptions;
+    public string[] ExtraOptions;
     public string Type;
 
-    public TrumpMessage(string choosingPlayer, string trump = "") : base("Trump")
+    public TrumpMessage(string choosingPlayer, string trump="", string[] availableOptions=null, string[] extraOptions=null) : base("Trump")
     {
         ChoosingPlayer = choosingPlayer;
         TrumpSuit = trump;
+        AvailableOptions = availableOptions;
+        ExtraOptions = extraOptions;
     }
 
     public override bool IsValid()

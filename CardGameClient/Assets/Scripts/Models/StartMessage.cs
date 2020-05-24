@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-public class StartMessage : Message
+﻿public class StartMessage : Message
 {
     public Card[] Cards;
     public string Type;

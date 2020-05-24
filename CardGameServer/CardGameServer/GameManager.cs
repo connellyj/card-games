@@ -37,14 +37,16 @@ namespace CardGameServer
         private static readonly Dictionary<string, Type> GameManagerMap = new Dictionary<string, Type>()
         {
             { "Hearts", typeof(HeartsGameManager) },
-            { "Pinochle", typeof(PinochleGameManager) }
+            { "Pinochle", typeof(PinochleGameManager) },
+            { "Mizerka", typeof(MizerkaGameManager) }
         };
 
         // Static map of game type to game info
         private static readonly Dictionary<string, GameInfoMessage> GameInfoMap = new Dictionary<string, GameInfoMessage>()
         {
             { "Hearts", new GameInfoMessage(HeartsGameManager.MinPlayers()) },
-            { "Pinochle", new GameInfoMessage(PinochleGameManager.MinPlayers()) }
+            { "Pinochle", new GameInfoMessage(PinochleGameManager.MinPlayers()) },
+            { "Mizerka", new GameInfoMessage(MizerkaGameManager.MinPlayers()) }
         };
 
 
@@ -296,6 +298,15 @@ namespace CardGameServer
             }
         }
 
+        /// <summary>
+        /// Get all the suits.
+        /// </summary>
+        /// <returns> List of suits </returns>
+        protected static List<string> GetSuits()
+        {
+            return Suits;
+        }
+
         private static void BroadcastAvailableGames(string gameType)
         {
             Server.Instance().Broadcast(GetAvailableGames(gameType),
@@ -498,6 +509,7 @@ namespace CardGameServer
         /// <param name="dealer"> The current dealer </param>
         protected virtual void DoStartRound(int dealer)
         {
+            SendPlayerHands();
             StartTrick(CurPlayer, true);
         }
 
@@ -608,14 +620,14 @@ namespace CardGameServer
         }
 
         /// <summary>
-        /// By default, returns 100.
+        /// By default, returns true when any player has 100 points.
         /// Used to determine when the game should end.
         /// Subclasses should override to enable different behaviors.
         /// </summary>
-        /// <returns> The points required to end the game </returns>
-        protected virtual int GetWinningPointTotal()
+        /// <returns> Whether the game is over </returns>
+        protected virtual bool ShouldGameEnd()
         {
-            return WINNING_POINTS;
+            return Players.Any(p => p.Score >= WINNING_POINTS);
         }
 
         /// <summary>
@@ -798,11 +810,18 @@ namespace CardGameServer
             {
                 p.Cards = deck.Skip(idx * GetNumCardsInHand()).Take(GetNumCardsInHand()).ToList();
                 idx++;
-                Server.Instance().Send(new StartMessage(p.Cards.ToArray()), p.Uid);
             }
             if (deck.Length > idx * GetNumCardsInHand())
             {
                 DoDealExtraCards(deck.Skip(idx * GetNumCardsInHand()));
+            }
+        }
+
+        protected void SendPlayerHands()
+        {
+            foreach (Player p in Players)
+            {
+                Server.Instance().Send(new StartMessage(p.Cards.ToArray()), p.Uid);
             }
         }
 
@@ -841,7 +860,7 @@ namespace CardGameServer
                     UpdateAndBroadcastAllScores();
 
                     // Handle game over
-                    if (Players.Any(p => p.Score >= GetWinningPointTotal()))
+                    if (ShouldGameEnd())
                     {
                         Broadcast(new GameOverMessage(DoGetGameWinningPlayer()));
                         IsGameOver = true;

@@ -7,6 +7,7 @@ namespace CardGameServer.Models
         public string GameName;
         public string Name;
         public string Uid;
+        public List<string> TrumpUsed;
         public List<Card> Cards;
         public int Score;
         public int SecretScore;
@@ -36,6 +37,7 @@ namespace CardGameServer.Models
 
         public void ResetScores()
         {
+            TrumpUsed = new List<string>();
             Score = 0;
             ResetPerHandScores();
         }

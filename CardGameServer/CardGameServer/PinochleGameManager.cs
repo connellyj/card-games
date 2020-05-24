@@ -22,14 +22,11 @@ namespace CardGameServer
         public static readonly int TRUMP_NINE = 1;
         public static readonly int TRUMP_RUN = 15;
 
-        // Static list of card suits
-        private static readonly List<string> Suits = new List<string>() { "C", "D", "S", "H" };
-
         // Static list of card ranks
         private static readonly List<string> Ranks = new List<string>() { "9", "J", "Q", "K", "10", "A" };
 
         // Number of suits in the deck
-        public static readonly int NUM_SUITS = Suits.Count;
+        public static readonly int NUM_SUITS = GetSuits().Count;
 
         // Number of ranks in the deck
         public static readonly int NUM_RANKS = Ranks.Count;
@@ -89,7 +86,7 @@ namespace CardGameServer
             List<string> doubleRank = new List<string>();
             doubleRank.AddRange(Ranks);
             doubleRank.AddRange(Ranks);
-            return Deck.Shuffle(Suits, doubleRank);
+            return Deck.Shuffle(GetSuits(), doubleRank);
         }
 
         /// <summary>
@@ -107,6 +104,7 @@ namespace CardGameServer
         /// <param name="dealer"> The index of the dealer </param>
         protected override void DoStartRound(int dealer)
         {
+            SendPlayerHands();
             StartBid(GetCurrentPlayer(), dealer);
             SendMeldPoints();
         }
