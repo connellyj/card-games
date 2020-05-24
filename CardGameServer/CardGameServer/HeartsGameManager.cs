@@ -187,6 +187,7 @@ namespace CardGameServer
 
                 // Update and send pass message
                 PassMessage passMessage = new PassMessage(players[i].Name, NUM_TO_PASS, passingTo);
+                Console.WriteLine("i: " + i.ToString());
                 Console.WriteLine("idx: " + idx.ToString());
                 Console.WriteLine(JsonConvert.SerializeObject(passMessage));
                 PassMessages.Add(passMessage);
@@ -194,6 +195,7 @@ namespace CardGameServer
             }
 
             // Update pass direction
+            Console.WriteLine("CurPass: " + CurPass.ToString());
             CurPass = (CurPass + 1) % PASS_DIRS.Length;
             Console.WriteLine("CurPass: " + CurPass.ToString());
         }
