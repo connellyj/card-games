@@ -94,10 +94,7 @@ namespace CardGameServer
         /// <returns> Minimum number of players </returns>
         public static int MinPlayers()
         {
-            lock (GameManagerMap)
-            {
-                return MIN_PLAYERS;
-            }
+            return MIN_PLAYERS;
         }
 
         /// <summary>

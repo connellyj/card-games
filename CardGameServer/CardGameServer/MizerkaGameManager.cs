@@ -65,6 +65,25 @@ namespace CardGameServer
         }
 
         /// <summary>
+        /// Winning card is highest or highest trump
+        /// </summary>
+        /// <param name="trick"> The cards in the trick </param>
+        /// <returns> The index of the winning card </returns>
+        protected override int DoDecideTrick(List<Card> trick)
+        {
+            string suit = trick[0].Suit;
+            Card highestTrump = trick.Where(c => c.Suit == Trump).OrderBy(c => c.SortKey).LastOrDefault();
+            if (highestTrump != null)
+            {
+                return trick.IndexOf(highestTrump);
+            }
+            else
+            {
+                return trick.IndexOf(trick.Where(c => c.Suit == suit).OrderBy(c => c.SortKey).Last());
+            }
+        }
+
+        /// <summary>
         /// TricksTaken used for scoring, so just send out trick info
         /// </summary>
         /// <param name="trick"> The completed trick </param>
@@ -95,6 +114,15 @@ namespace CardGameServer
         protected override bool ShouldGameEnd()
         {
             return GetPlayers().All(p => p.TrumpUsed.Count == TrumpOptions.Count);
+        }
+
+        /// <summary>
+        /// Returns min number of players required.
+        /// </summary>
+        /// <returns> Number of players required to start the game </returns>
+        protected override int GetMinPlayers()
+        {
+            return MinPlayers();
         }
 
         /// <summary>
