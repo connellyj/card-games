@@ -81,7 +81,8 @@ namespace CardGameServer
             GameNameMap = new Dictionary<string, Dictionary<string, GameManager>>
             {
                 { "Hearts", new Dictionary<string, GameManager>() },
-                { "Pinochle", new Dictionary<string, GameManager>() }
+                { "Pinochle", new Dictionary<string, GameManager>() },
+                { "Mizerka", new Dictionary<string, GameManager>() }
             };
             PlayerGameNameMap = new Dictionary<string, string>();
             PlayerGameTypeMap = new Dictionary<string, string>();
