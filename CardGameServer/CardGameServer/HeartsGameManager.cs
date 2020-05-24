@@ -109,7 +109,7 @@ namespace CardGameServer
             {
                 foreach (Player p in GetPlayers())
                 {
-                    if (p != shootPlayer)
+                    if (p.Uid != shootPlayer.Uid)
                     {
                         p.Score += ALL_POINTS;
                     }
