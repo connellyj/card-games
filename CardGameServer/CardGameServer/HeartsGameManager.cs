@@ -190,7 +190,7 @@ namespace CardGameServer
             }
 
             // Update pass direction
-            CurPass = (CurPass + 1) & PASS_DIRS.Length;
+            CurPass = (CurPass + 1) % PASS_DIRS.Length;
         }
     }
 }
