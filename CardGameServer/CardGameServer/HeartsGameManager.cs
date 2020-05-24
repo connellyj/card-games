@@ -1,4 +1,6 @@
 ﻿using CardGameServer.Models;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -185,12 +187,15 @@ namespace CardGameServer
 
                 // Update and send pass message
                 PassMessage passMessage = new PassMessage(players[i].Name, NUM_TO_PASS, passingTo);
+                Console.WriteLine("idx: " + idx.ToString());
+                Console.WriteLine(JsonConvert.SerializeObject(passMessage));
                 PassMessages.Add(passMessage);
                 Server.Instance().Send(passMessage, players[i].Uid);
             }
 
             // Update pass direction
             CurPass = (CurPass + 1) % PASS_DIRS.Length;
+            Console.WriteLine("CurPass: " + CurPass.ToString());
         }
     }
 }
