@@ -408,6 +408,7 @@ public class Client : MonoBehaviour
             ViewController.Instance.UpdateLog(trumpMessage.ChoosingPlayer, "Choosing trump...");
             if (trumpMessage.ChoosingPlayer == PlayerName)
             {
+                ViewController.Instance.ShowTrumpWindow(true);
                 if (trumpMessage.ExtraOptions != null)
                 {
                     ViewController.Instance.UpdateExtraTrumpOptions(trumpMessage.ExtraOptions);
@@ -416,7 +417,6 @@ public class Client : MonoBehaviour
                 {
                     ViewController.Instance.UpdateDisabledTrumpOptions(trumpMessage.UnavailableOptions);
                 }
-                ViewController.Instance.ShowTrumpWindow(true);
             }
         }
         else

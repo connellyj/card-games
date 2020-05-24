@@ -16,7 +16,7 @@ public class TrumpView : MonoBehaviour
     private GameObject Selected;
     private Dictionary<GameObject, string> TrumpMap;
 
-    void Start()
+    public void Init()
     {
         TrumpMap = new Dictionary<GameObject, string>
         {
@@ -30,6 +30,10 @@ public class TrumpView : MonoBehaviour
         Spades.GetComponent<Button>().onClick.AddListener(() => ToggleHighlight(Spades));
         Hearts.GetComponent<Button>().onClick.AddListener(() => ToggleHighlight(Hearts));
         OkButton.onClick.AddListener(HandleTrump);
+        foreach (GameObject g in TrumpMap.Select(kvp => kvp.Key))
+        {
+            g.SetActive(true);
+        }
     }
 
     public void AddExtraOptions(string[] extraOptions)
@@ -38,7 +42,8 @@ public class TrumpView : MonoBehaviour
         {
             TrumpMap.Add(ExtraOptions[i], extraOptions[i]);
             ExtraOptions[i].GetComponentInChildren<TextMeshProUGUI>().text = extraOptions[i];
-            ExtraOptions[i].GetComponent<Button>().onClick.AddListener(() => ToggleHighlight(ExtraOptions[i]));
+            GameObject g = ExtraOptions[i];
+            ExtraOptions[i].GetComponent<Button>().onClick.AddListener(() => ToggleHighlight(g));
         }
     }
 
@@ -55,10 +60,6 @@ public class TrumpView : MonoBehaviour
         if (Selected != null)
         {
             Client.Instance.SubmitTrump(TrumpMap[Selected]);
-            foreach (GameObject g in TrumpMap.Select(kvp => kvp.Key))
-            {
-                g.SetActive(true);
-            }
         }
     }
 

@@ -34019,7 +34019,9 @@ MonoBehaviour:
   Diamonds: {fileID: 1893648966}
   Spades: {fileID: 2029285852}
   Hearts: {fileID: 854533320}
-  ExtraOptions: []
+  ExtraOptions:
+  - {fileID: 276022637}
+  - {fileID: 912407443}
   OkButton: {fileID: 6077745707785368555}
 --- !u!1 &6077745709276102969
 GameObject:

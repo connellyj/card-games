@@ -119,6 +119,7 @@ public class ViewController : MonoBehaviour
 
     public void ShowTrumpWindow(bool show)
     {
+        TrumpPopUp.Init();
         TrumpPopUp.gameObject.SetActive(show);
     }
 
