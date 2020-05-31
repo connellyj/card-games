@@ -11,7 +11,6 @@ CardGameClient/*.sln
 
 CardGameServer/.vs/*
 CardGameServer/*.sln
-CardGameServer/CardGameServer/*.csproj
 CardGameServer/CardGameServer/*.user
 CardGameServer/CardGameServer/bin/Debug/*
 CardGameServer/CardGameServer/obj/*

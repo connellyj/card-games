@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{73FECCA8-37EC-426F-B3CF-6AF8DD69D0F8}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>CardGameServer</RootNamespace>
+    <AssemblyName>CardGameServer</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="websocket-sharp, Version=1.0.1.0, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocketSharp-netstandard.1.0.1\lib\net45\websocket-sharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\AvailableGamesMessage.cs">
+      <Link>MessageModels\AvailableGamesMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\BidMessage.cs">
+      <Link>MessageModels\BidMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\Card.cs">
+      <Link>MessageModels\Card.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\DisconnectMessage.cs">
+      <Link>MessageModels\DisconnectMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\ErrorResponse.cs">
+      <Link>MessageModels\ErrorResponse.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\GameInfoMessage.cs">
+      <Link>MessageModels\GameInfoMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\GameOverMessage.cs">
+      <Link>MessageModels\GameOverMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\GameTypeMessage.cs">
+      <Link>MessageModels\GameTypeMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\JoinMessage.cs">
+      <Link>MessageModels\JoinMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\JoinResponse.cs">
+      <Link>MessageModels\JoinResponse.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\KittyMessage.cs">
+      <Link>MessageModels\KittyMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\MeldMessage.cs">
+      <Link>MessageModels\MeldMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\MeldPointsMessage.cs">
+      <Link>MessageModels\MeldPointsMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\Message.cs">
+      <Link>MessageModels\Message.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\PassMessage.cs">
+      <Link>MessageModels\PassMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\RestartMessage.cs">
+      <Link>MessageModels\RestartMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\ScoreMessage.cs">
+      <Link>MessageModels\ScoreMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\StartMessage.cs">
+      <Link>MessageModels\StartMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\TrickInfoMessage.cs">
+      <Link>MessageModels\TrickInfoMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\TrickMessage.cs">
+      <Link>MessageModels\TrickMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\TrumpMessage.cs">
+      <Link>MessageModels\TrumpMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\TurnMessage.cs">
+      <Link>MessageModels\TurnMessage.cs</Link>
+    </Compile>
+    <Compile Include="GameManager.cs" />
+    <Compile Include="HeartsGameManager.cs" />
+    <Compile Include="MeldCounter.cs" />
+    <Compile Include="MizerkaGameManager.cs" />
+    <Compile Include="Models\Deck.cs" />
+    <Compile Include="PinochleGameManager.cs" />
+    <Compile Include="Models\Player.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Server.cs" />
+    <Compile Include="PinochleTrickDecider.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
