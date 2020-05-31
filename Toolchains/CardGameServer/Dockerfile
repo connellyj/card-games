@@ -6,8 +6,7 @@ RUN apt-get update
 RUN apt-get install -y git
 
 RUN git clone https://github.com/connellyj/card-games.git
-RUN cd card-games/CardGameServer/
 RUN nuget update -self
-RUN nuget install
+RUN nuget restore card-games/CardGameServer
 
 CMD /bin/bash
