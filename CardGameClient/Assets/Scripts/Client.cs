@@ -37,7 +37,7 @@ public class Client : MonoBehaviour
         StartInitialized = false;
 
         //Ws = new WebSocket("ws://localhost:2000");
-        Ws = new WebSocket("ws://18.217.141.221:2000");
+        Ws = new WebSocket("ws://pi.winesj.com:2000");
 
         Ws.OnOpen += (sender, e) =>
         {
