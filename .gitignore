@@ -11,6 +11,9 @@ CardGameClient/*.sln
 
 CardGameServer/.vs/*
 CardGameServer/CardGameServer/*.user
+CardGameServer/CardGameServerTests/*.user
 CardGameServer/CardGameServer/bin/Debug/*
+CardGameServer/CardGameServerTests/bin/*
 CardGameServer/CardGameServer/obj/*
+CardGameServer/CardGameServerTests/obj/*
 CardGameServer/packages/*
