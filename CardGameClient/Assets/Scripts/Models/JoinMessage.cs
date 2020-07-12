@@ -5,7 +5,7 @@
     public int Order;
     public string Type;
 
-    public JoinMessage(string userName, string gameName = null, int order = 0) : base("Join")
+    public JoinMessage(string userName, string gameName, int order=0) : base("Join")
     {
         UserName = userName;
         GameName = gameName;

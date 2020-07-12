@@ -1,6 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using CardGameServer.GameManagers;
+using CardGameServer.Models;
+using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using WebSocketSharp;
 using WebSocketSharp.Server;
@@ -21,7 +22,6 @@ namespace CardGameServer
             };
             SocketServer.AddWebSocketService<Router>("/");
             SocketServer.WebSocketServices["/"].KeepClean = false;
-            GameManager.StaticInitialize();
         }
 
         ~Server()
@@ -44,31 +44,33 @@ namespace CardGameServer
             Console.ReadKey(true);  // keeps program active
         }
 
-        public void Broadcast<Model>(Model message)
+        public void Send(MessagePackets messages)
         {
-            LogSent(message);
-            SocketServer.WebSocketServices["/"].Sessions.Broadcast(JsonConvert.SerializeObject(message));
-        }
-
-        public void Broadcast<Model>(Model message, IEnumerable<string> uids)
-        {
-            LogSent(message);
-            foreach (string uid in SocketServer.WebSocketServices["/"].Sessions.ActiveIDs.Intersect(uids))
+            foreach (MessagePacket m in messages.Messages)
             {
-                SocketServer.WebSocketServices["/"].Sessions.SendTo(JsonConvert.SerializeObject(message), uid);
+                LogSent(m.Message);
+                if (m.SendTo == null)
+                {
+                    SocketServer.WebSocketServices["/"].Sessions.Broadcast(JsonConvert.SerializeObject(m.Message));
+                }
+                else
+                {
+                    foreach (string uid in m.SendTo)
+                    {
+                        if (SocketServer.WebSocketServices["/"].Sessions.ActiveIDs.Any(s => s == uid))
+                        {
+                            SocketServer.WebSocketServices["/"].Sessions.SendTo(JsonConvert.SerializeObject(m.Message), uid);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Unable to send to " + uid);
+                        }
+                    }
+                }
             }
         }
 
-        public void Send<Model>(Model message, string uid)
-        {
-            LogSent(message);
-            if (SocketServer.WebSocketServices["/"].Sessions.ActiveIDs.Any(s => s == uid))
-            {
-                SocketServer.WebSocketServices["/"].Sessions.SendTo(JsonConvert.SerializeObject(message), uid);
-            }
-        }
-
-        private void LogSent<Model>(Model message)
+        private void LogSent(Message message)
         {
             Console.WriteLine("    Sent: " + JsonConvert.SerializeObject(message));
         }
@@ -79,17 +81,17 @@ namespace CardGameServer
             {
                 string message = e.Data;
                 Console.WriteLine("Received: " + message);
-                HandleMessage(message);
+                SendDo(() => HandleMessage(message));
             }
 
             protected override void OnOpen()
             {
-                Send(JsonConvert.SerializeObject(GameManager.GetGameTypes()));
+                SendDo(() => GamesManager.Get().HandleNewConnection(ID));
             }
 
             protected override void OnClose(CloseEventArgs e)
             {
-                GameManager.HandlePlayerDisconnect(ID);
+                SendDo(() => GamesManager.Get().HandlePlayerDisconnect(ID));
             }
 
             protected override void OnError(ErrorEventArgs e)
@@ -97,70 +99,75 @@ namespace CardGameServer
                 Console.WriteLine("WebSocket error: " + e.Message);
             }
 
-            private void HandleMessage(string message)
+            private void SendDo(Func<MessagePackets> messageGenerator)
+            {
+                try
+                {
+                    Instance().Send(messageGenerator());
+                }
+                catch (Exception err)
+                {
+                    Instance().Send(new MessagePackets(new ErrorResponse(err.Message), ID));
+                }
+            }
+
+            private MessagePackets HandleMessage(string message)
             {
                 RestartMessage restartMessage = JsonConvert.DeserializeObject<RestartMessage>(message);
                 if (restartMessage.IsValid())
                 {
-                    GameManager.HandleRestart(ID, restartMessage);
-                    return;
+                    return GamesManager.Get().HandleRestart(ID, restartMessage);
                 }
 
                 GameTypeMessage gameTypeMessage = JsonConvert.DeserializeObject<GameTypeMessage>(message);
                 if (gameTypeMessage.IsValid())
                 {
-                    GameManager.HandleGameTypes(ID, gameTypeMessage);
-                    return;
+                    return GamesManager.Get().HandleGameTypes(ID, gameTypeMessage);
                 }
 
                 JoinMessage joinMessage = JsonConvert.DeserializeObject<JoinMessage>(message);
                 if (joinMessage.IsValid())
                 {
-                    GameManager.HandleJoin(ID, joinMessage);
-                    return;
+                    return GamesManager.Get().HandleJoin(ID, joinMessage);
                 }
 
                 BidMessage bidMessage = JsonConvert.DeserializeObject<BidMessage>(message);
                 if (bidMessage.IsValid())
                 {
-                    GameManager.HandleBid(ID, bidMessage);
-                    return;
+                    return GamesManager.Get().HandleBid(ID, bidMessage);
                 }
 
                 KittyMessage kittyMessage = JsonConvert.DeserializeObject<KittyMessage>(message);
                 if (kittyMessage.IsValid())
                 {
-                    GameManager.HandleKitty(ID, kittyMessage);
-                    return;
+                    return GamesManager.Get().HandleKitty(ID, kittyMessage);
                 }
 
                 TrumpMessage trumpMessage = JsonConvert.DeserializeObject<TrumpMessage>(message);
                 if (trumpMessage.IsValid())
                 {
-                    GameManager.HandleTrump(ID, trumpMessage);
-                    return;
+                    return GamesManager.Get().HandleTrump(ID, trumpMessage);
                 }
 
                 MeldMessage meldMessage = JsonConvert.DeserializeObject<MeldMessage>(message);
                 if (meldMessage.IsValid())
                 {
-                    GameManager.HandleMeld(ID, meldMessage);
-                    return;
+                    return GamesManager.Get().HandleMeld(ID, meldMessage);
                 }
 
                 PassMessage passMessage = JsonConvert.DeserializeObject<PassMessage>(message);
                 if (passMessage.IsValid())
                 {
-                    GameManager.HandlePass(ID, passMessage);
-                    return;
+                    return GamesManager.Get().HandlePass(ID, passMessage);
                 }
 
-                    TurnMessage turnMessage = JsonConvert.DeserializeObject<TurnMessage>(message);
+                TurnMessage turnMessage = JsonConvert.DeserializeObject<TurnMessage>(message);
                 if (turnMessage.IsValid())
                 {
-                    GameManager.HandleTurn(ID, turnMessage);
-                    return;
+                    return GamesManager.Get().HandleTurn(ID, turnMessage);
                 }
+
+                return new MessagePackets();
             }
         }
     }

@@ -34,6 +34,10 @@ public class TrumpView : MonoBehaviour
         {
             g.SetActive(true);
         }
+        foreach (GameObject g in ExtraOptions)
+        {
+            g.SetActive(false);
+        }
     }
 
     public void AddExtraOptions(string[] extraOptions)
@@ -43,6 +47,7 @@ public class TrumpView : MonoBehaviour
             TrumpMap.Add(ExtraOptions[i], extraOptions[i]);
             ExtraOptions[i].GetComponentInChildren<TextMeshProUGUI>().text = extraOptions[i];
             GameObject g = ExtraOptions[i];
+            g.SetActive(true);
             ExtraOptions[i].GetComponent<Button>().onClick.AddListener(() => ToggleHighlight(g));
         }
     }

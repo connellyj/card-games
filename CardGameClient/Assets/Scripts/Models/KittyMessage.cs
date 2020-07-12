@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-public class KittyMessage : Message
+﻿public class KittyMessage : Message
 {
     public Card[] Kitty;
     public string ChoosingPlayer;

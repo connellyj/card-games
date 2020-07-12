@@ -1,9 +1,9 @@
-﻿using CardGameServer.Models;
-using System;
+﻿using CardGameServer.GameMechanics;
+using CardGameServer.Models;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CardGameServer
+namespace CardGameServer.GameManagers
 {
     public class MizerkaGameManager : GameManager
     {
@@ -16,7 +16,7 @@ namespace CardGameServer
         private static readonly string[] ExtraTrumpOptions = new string[2] { "No Trump", "Mizerka" };
 
         // All options for trump
-        private static readonly List<string> TrumpOptions = new List<string>(GetSuits().Union(ExtraTrumpOptions));
+        private static readonly List<string> TrumpOptions = new List<string>(Suits.Union(ExtraTrumpOptions));
 
         // Number of tricks required to break even
         private static readonly int[] TricksNeeded = new int[3] { 7, 5, 1 };
@@ -27,19 +27,7 @@ namespace CardGameServer
         // The 4th hand, the talon
         private List<Card> Talon;
 
-        // Trump suit for the current round
-        private string Trump;
-
-        /// <summary>
-        /// Returns the mininum number of players required to start the game.
-        /// </summary>
-        /// <returns> Minimum number of players </returns>
-        public static new int MinPlayers()
-        {
-            return MIN_PLAYERS;
-        }
-
-        public MizerkaGameManager()
+        public MizerkaGameManager() : base(new TrumpDecider())
         {
             Talon = new List<Card>();
         }
@@ -56,31 +44,14 @@ namespace CardGameServer
         /// <summary>
         /// Start the round with dealing first 5 cards and deciding trump
         /// </summary>
-        /// <param name="dealer"> The current dealer </param>
-        protected override void DoStartRound(int dealer)
+        /// <returns> List of messages to be sent </returns>
+        protected override MessagePackets DoStartRound()
         {
-            Player p = GetPlayer(dealer);
-            Server.Instance().Send(new StartMessage(p.Cards.Take(5).ToArray()), p.Uid);
-            Broadcast(new TrumpMessage(p.Name, unavailableOptions: p.TrumpUsed.ToArray(), extraOptions: ExtraTrumpOptions));
-        }
-
-        /// <summary>
-        /// Winning card is highest or highest trump
-        /// </summary>
-        /// <param name="trick"> The cards in the trick </param>
-        /// <returns> The index of the winning card </returns>
-        protected override int DoDecideTrick(List<Card> trick)
-        {
-            string suit = trick[0].Suit;
-            Card highestTrump = trick.Where(c => c.Suit == Trump).OrderBy(c => c.SortKey).LastOrDefault();
-            if (highestTrump != null)
-            {
-                return trick.IndexOf(highestTrump);
-            }
-            else
-            {
-                return trick.IndexOf(trick.Where(c => c.Suit == suit).OrderBy(c => c.SortKey).Last());
-            }
+            MessagePackets messages = new MessagePackets();
+            Player p = GetPlayer(GetDealerIndex());
+            messages.Add(new StartMessage(p.Cards.Take(5).ToArray()), p.Uid);
+            messages.Add(GetBroadcastMessage(new TrumpMessage(p.Name, unavailableOptions: p.TrumpUsed.ToArray(), extraOptions: ExtraTrumpOptions)));
+            return messages;
         }
 
         /// <summary>
@@ -88,9 +59,10 @@ namespace CardGameServer
         /// </summary>
         /// <param name="trick"> The completed trick </param>
         /// <param name="winningPlayer"> The index of the player that won the trick </param>
-        protected override void DoScoreTrick(List<Card> trick, Player winningPlayer)
+        /// <returns> List of messages to be sent </returns>
+        protected override MessagePackets DoScoreTrick(List<Card> trick, Player winningPlayer)
         {
-            SendTrickInfo();
+            return GetTrickInfoMessage();
         }
 
         /// <summary>
@@ -98,7 +70,7 @@ namespace CardGameServer
         /// </summary>
         protected override void DoUpdateScores()
         {
-            List<Player> players = GetPlayers();
+            List<Player> players = GetPlayersMutable();
             int dealer = GetDealerIndex();
             for (int i = 0; i < players.Count; i++)
             {
@@ -111,46 +83,51 @@ namespace CardGameServer
         /// Returns true when all players have chosen every option for trump.
         /// </summary>
         /// <returns> Whether the game is over </returns>
-        protected override bool ShouldGameEnd()
+        protected override bool DoShouldGameEnd()
         {
-            return GetPlayers().All(p => p.TrumpUsed.Count == TrumpOptions.Count);
+            return GetPlayersMutable().All(p => p.TrumpUsed.Count == TrumpOptions.Count);
         }
 
         /// <summary>
         /// Returns min number of players required.
         /// </summary>
         /// <returns> Number of players required to start the game </returns>
-        protected override int GetMinPlayers()
+        protected override int DoGetMinPlayers()
         {
-            return MinPlayers();
+            return MIN_PLAYERS;
         }
 
         /// <summary>
         /// Handle a TrumpMessage.
         /// </summary>
         /// <param name="trumpMessage"></param>
-        protected override void HandleTrump(TrumpMessage trumpMessage)
+        /// <returns> List of messages to be sent </returns>
+        public override MessagePackets HandleTrump(TrumpMessage trumpMessage)
         {
+            MessagePackets messages = new MessagePackets();
+
             // Broadcast to all players
-            Broadcast(trumpMessage);
+            messages.Add(GetBroadcastMessage(trumpMessage));
 
             // Save trump and update player model
-            Trump = trumpMessage.TrumpSuit;
-            Player choosingPlayer = GetPlayers().Where(p => p.Name == trumpMessage.ChoosingPlayer).Single();
+            ((TrumpDecider)GetDecider()).Trump = trumpMessage.TrumpSuit;
+            Player choosingPlayer = GetPlayersMutable().Where(p => p.Name == trumpMessage.ChoosingPlayer).Single();
             choosingPlayer.TrumpUsed.Add(trumpMessage.TrumpSuit);
 
             // Send out cards and start first trick
-            SendPlayerHands();
-            SendTrickInfo();
-            StartTrick(GetDealerIndex());
+            messages.Add(GetStartMessages());
+            messages.Add(GetTrickInfoMessage());
+            messages.Add(StartTrick(GetDealerIndex()));
+            return messages;
         }
 
         /// <summary>
         /// Helper method to send TrickInfoMessage
         /// </summary>
-        private void SendTrickInfo()
+        /// <returns> List of messages to be sent </returns>
+        private MessagePackets GetTrickInfoMessage()
         {
-            List<Player> players = GetPlayers();
+            List<Player> players = GetPlayersMutable();
             int dealer = GetDealerIndex();
             Dictionary<string, int> trickInfo = new Dictionary<string, int>();
             for (int i = 0; i < players.Count; i++)
@@ -158,7 +135,7 @@ namespace CardGameServer
                 int tricksLeft = GetTricksNeeded(i, dealer);
                 trickInfo.Add(players[i].Name, tricksLeft);
             }
-            Broadcast(new TrickInfoMessage(trickInfo));
+            return GetBroadcastMessage(new TrickInfoMessage(trickInfo));
         }
 
         /// <summary>

@@ -4,7 +4,7 @@
     public string ChosenGame;
     public string Type;
 
-    public GameTypeMessage(string[] gameTypes=null, string game = "") : base("GameType")
+    public GameTypeMessage(string[] gameTypes=null, string game=null) : base("GameType")
     {
         GameTypes = gameTypes;
         ChosenGame = game;

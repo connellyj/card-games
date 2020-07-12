@@ -62,12 +62,13 @@ public class GameLogView : MonoBehaviour
 
     public void SetNames(Dictionary<int, string> names)
     {
+        ResetScores();
         foreach (int key in names.Keys)
         {
             PlayerNameTexts[key].text = names[key];
             PlayerScoreMap.Add(names[key], key);
+            UpdateScore(names[key], 0);
         }
-        ResetScores();
     }
 
     public void UpdateScore(string player, int score)
@@ -79,7 +80,7 @@ public class GameLogView : MonoBehaviour
     {
         foreach (TextMeshProUGUI t in ScoreTexts)
         {
-            t.text = "0";
+            t.text = string.Empty;
         }
     }
 

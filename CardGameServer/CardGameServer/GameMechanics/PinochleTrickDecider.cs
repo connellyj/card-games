@@ -1,24 +1,23 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace CardGameServer
+namespace CardGameServer.GameMechanics
 {
-    public static class PinochleTrickDecider
+    public class PinochleTrickDecider : TrumpDecider
     {
-        public static bool IsPoint(Card c)
+        public PinochleTrickDecider()
         {
-            return c.Rank == "10" || c.Rank == "K" || c.Rank == "A";
         }
 
-        public static List<Card> ValidCards(List<Card> hand, List<Card> trick, string trump)
+        public override List<Card> ValidCards(List<Card> hand, List<Card> trick)
         {
             string followSuit = trick[0].Suit;
             List<Card> followSuitCards = hand.Where(c => c.Suit == followSuit).ToList();
-            List<Card> trumpCards = hand.Where(c => c.Suit == trump).ToList();
-            Card highestTrumpCard = HighestInSuit(trick, trump);
+            List<Card> trumpCards = hand.Where(c => c.Suit == Trump).ToList();
+            Card highestTrumpCard = HighestInSuit(trick, Trump);
             if (followSuitCards.Count > 0)
             {
-                if (followSuit == trump || highestTrumpCard == null)
+                if (followSuit == Trump || highestTrumpCard == null)
                 {
                     Card highestCard = HighestInSuit(trick, followSuit);
                     List<Card> higherCards = HigherCards(followSuitCards, highestCard);
@@ -44,19 +43,9 @@ namespace CardGameServer
             return hand;
         }
 
-        public static int WinningCard(List<Card> trick, string trump)
+        public static bool IsPoint(Card c)
         {
-            List<Card> trumpCards = trick.Where(c => c.Suit == trump).ToList();
-            Card card = null;
-            if (trumpCards.Count > 0)
-            {
-                card = HighestInSuit(trick, trump);
-            }
-            else
-            {
-                card = HighestInSuit(trick, trick[0].Suit);
-            }
-            return trick.IndexOf(card);
+            return c.Rank == "10" || c.Rank == "K" || c.Rank == "A";
         }
 
         private static List<Card> HigherCards(List<Card> cards, Card highestCard)

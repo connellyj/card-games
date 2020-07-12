@@ -60,9 +60,6 @@
     <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\ErrorResponse.cs">
       <Link>MessageModels\ErrorResponse.cs</Link>
     </Compile>
-    <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\GameInfoMessage.cs">
-      <Link>MessageModels\GameInfoMessage.cs</Link>
-    </Compile>
     <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\GameOverMessage.cs">
       <Link>MessageModels\GameOverMessage.cs</Link>
     </Compile>
@@ -111,16 +108,23 @@
     <Compile Include="..\..\CardGameClient\Assets\Scripts\Models\TurnMessage.cs">
       <Link>MessageModels\TurnMessage.cs</Link>
     </Compile>
-    <Compile Include="GameManager.cs" />
-    <Compile Include="HeartsGameManager.cs" />
-    <Compile Include="MeldCounter.cs" />
-    <Compile Include="MizerkaGameManager.cs" />
+    <Compile Include="GameManagers\GameManager.cs" />
+    <Compile Include="GameMechanics\HeartsTrickDecider.cs" />
+    <Compile Include="GameMechanics\TrumpDecider.cs" />
+    <Compile Include="GameMechanics\TrickDecider.cs" />
+    <Compile Include="GameManagers\GamesManager.cs" />
+    <Compile Include="GameManagers\HeartsGameManager.cs" />
+    <Compile Include="GameMechanics\MeldCounter.cs" />
+    <Compile Include="GameManagers\MizerkaGameManager.cs" />
     <Compile Include="Models\Deck.cs" />
-    <Compile Include="PinochleGameManager.cs" />
+    <Compile Include="Models\GameState.cs" />
+    <Compile Include="Models\MessagePacket.cs" />
+    <Compile Include="Models\MessagePackets.cs" />
+    <Compile Include="GameManagers\PinochleGameManager.cs" />
     <Compile Include="Models\Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Server.cs" />
-    <Compile Include="PinochleTrickDecider.cs" />
+    <Compile Include="GameMechanics\PinochleTrickDecider.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

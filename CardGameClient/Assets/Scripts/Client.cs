@@ -185,12 +185,6 @@ public class Client : MonoBehaviour
                     return;
                 }
 
-                GameInfoMessage infoMessage = JsonConvert.DeserializeObject<GameInfoMessage>(message);
-                if (infoMessage.IsValid())
-                {
-                    return;
-                }
-
                 JoinMessage joinMessage = JsonConvert.DeserializeObject<JoinMessage>(message);
                 if (joinMessage.IsValid())
                 {
@@ -423,8 +417,7 @@ public class Client : MonoBehaviour
         {
             string trumpOption = SuitUnicodeMap.ContainsKey(trumpMessage.TrumpSuit) ? SuitUnicodeMap[trumpMessage.TrumpSuit] : trumpMessage.TrumpSuit;
             ViewController.Instance.UpdateTrumpInfo(trumpOption);
-            string trumpStr = trumpMessage.TrumpSuit == string.Empty ? "Choosing trump..." : "Trump is: " + trumpOption;
-            ViewController.Instance.UpdateLog(trumpMessage.ChoosingPlayer, trumpStr);
+            ViewController.Instance.UpdateLog(trumpMessage.ChoosingPlayer, "Trump is: " + trumpOption);
         }
     }
 

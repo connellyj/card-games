@@ -55,13 +55,17 @@ public class JoinView : MonoBehaviour
         }
         else
         {
-            if (userName != string.Empty && GameList.options.Count > 0)
+            if (userName == string.Empty)
             {
-                Client.Instance.SubmitJoinGame(userName, GameList.options[GameList.value].text);
+                ErrorMessage.text = "Enter a user name";
+            }
+            else if (GameList.options.Count == 0)
+            {
+                ErrorMessage.text = "Select a game";
             }
             else
             {
-                ErrorMessage.text = "Enter a user name";
+                Client.Instance.SubmitJoinGame(userName, GameList.options[GameList.value].text);
             }
         }
     }

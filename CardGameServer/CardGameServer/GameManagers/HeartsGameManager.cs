@@ -1,8 +1,9 @@
-﻿using CardGameServer.Models;
+﻿using CardGameServer.GameMechanics;
+using CardGameServer.Models;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CardGameServer
+namespace CardGameServer.GameManagers
 {
     public class HeartsGameManager : GameManager
     {
@@ -29,13 +30,10 @@ namespace CardGameServer
         // Index of the current pass direction
         private int CurPass;
 
-        // Whether points have been broken
-        private bool ArePointsBroken;
-
         /// <summary>
         /// Constructor
         /// </summary>
-        public HeartsGameManager() : base()
+        public HeartsGameManager() : base(new HeartsTrickDecider())
         {
             PassMessages = new List<PassMessage>();
             CurPass = 0;
@@ -44,59 +42,13 @@ namespace CardGameServer
         /// <summary>
         /// Start a round by starting passing.
         /// </summary>
-        /// <param name="dealer"> The current dealer </param>
-        protected override void DoStartRound(int dealer)
+        /// <returns> List of messages to be sent </returns>
+        protected override MessagePackets DoStartRound()
         {
-            StartPass();
-        }
-
-        /// <summary>
-        /// The first trick must start with the 2 of clubs.
-        /// </summary>
-        /// <param name="hand"> The player's hand </param>
-        /// <returns> Valid cards that can be played </returns>
-        protected override Card[] DoGetFirstTrickValidCards(List<Card> hand)
-        {
-            return hand.Where(c => c.Rank == "2" && c.Suit == "C").ToArray();
-        }
-
-        /// <summary>
-        /// Can't lead hearts if they haven't been broken
-        /// </summary>
-        /// <param name="hand"> The players cards </param>
-        /// <returns> The valid cards that can be played </returns>
-        protected override Card[] DoGetTrickStartValidCards(List<Card> hand)
-        {
-            if (ArePointsBroken)
-            {
-                return hand.ToArray();
-            }
-            else
-            {
-                return hand.Where(c => c.Suit != "H" && !(c.Suit == "S" && c.Rank == "Q")).ToArray();
-            }
-        }
-
-        /// <summary>
-        /// If this is the first trick, remove hearts and the queen of spades from the base class valid cards,
-        /// otherwise just return the base class valid cards.
-        /// </summary>
-        /// <param name="hand"> The player's hand </param>
-        /// <param name="trick"> The current trick </param>
-        /// <param name="isFirstTrick"> Whether this trick is the first trick of the round </param>
-        /// <returns></returns>
-        protected override Card[] DoGetValidCards(List<Card> hand, List<Card> trick, bool isFirstTrick)
-        {
-            Card[] orig = base.DoGetValidCards(hand, trick, isFirstTrick);
-            if (isFirstTrick)
-            {
-                Card[] noHearts = orig.Where(c => c.Suit != "H" && !(c.Suit == "S" && c.Rank == "Q")).ToArray();
-                if (noHearts.Length > 0)
-                {
-                    return noHearts;
-                }
-            }
-            return orig;
+            MessagePackets messages = new MessagePackets();
+            messages.Add(GetStartMessages());
+            messages.Add(StartPass());
+            return messages;
         }
 
         /// <summary>
@@ -104,21 +56,24 @@ namespace CardGameServer
         /// </summary>
         /// <param name="trick"> The finished trick </param>
         /// <param name="winningPlayer"> The player who won the trick </param>
-        protected override void DoScoreTrick(List<Card> trick, Player winningPlayer)
+        /// <returns> List of messages to be sent </returns>
+        protected override MessagePackets DoScoreTrick(List<Card> trick, Player winningPlayer)
         {
             foreach (Card c in trick)
             {
                 if (c.Suit == "H")
                 {
                     winningPlayer.SecretScore++;
-                    ArePointsBroken = true;
+                    ((HeartsTrickDecider)GetDecider()).ArePointsBroken = true;
                 }
                 if (c.Suit == "S" && c.Rank == "Q")
                 {
                     winningPlayer.SecretScore += QUEENIE;
-                    ArePointsBroken = true;
+                    ((HeartsTrickDecider)GetDecider()).ArePointsBroken = true;
                 }
             }
+
+            return new MessagePackets();
         }
 
         /// <summary>
@@ -126,10 +81,10 @@ namespace CardGameServer
         /// </summary>
         protected override void DoUpdateScores()
         {
-            Player shootPlayer = GetPlayers().Where(p => p.SecretScore == ALL_POINTS).SingleOrDefault();
+            Player shootPlayer = GetPlayersMutable().Where(p => p.SecretScore == ALL_POINTS).SingleOrDefault();
             if (shootPlayer != null)
             {
-                foreach (Player p in GetPlayers())
+                foreach (Player p in GetPlayersMutable())
                 {
                     if (p.Uid != shootPlayer.Uid)
                     {
@@ -149,15 +104,18 @@ namespace CardGameServer
         /// <returns> The name of the winning player </returns>
         protected override string DoGetGameWinningPlayer()
         {
-            return GetPlayers().OrderBy(p => p.Score).First().Name;
+            return GetPlayersMutable().OrderBy(p => p.Score).First().Name;
         }
 
         /// <summary>
         /// Handle a PassMessage.
         /// </summary>
         /// <param name="passMessage"></param>
-        protected override void HandlePass(PassMessage passMessage)
+        /// <returns> List of messages to be sent </returns>
+        public override MessagePackets HandlePass(PassMessage passMessage)
         {
+            MessagePackets messages = new MessagePackets();
+
             // Add pass message
             PassMessages.Where(pm => pm.PassingPlayer == passMessage.PassingPlayer).Single().PassedCards = passMessage.PassedCards;
             
@@ -169,32 +127,37 @@ namespace CardGameServer
                     if (pm.PassingPlayer != pm.PassingTo)
                     {
                         // Update players' cards
-                        Player passingToPlayer = GetPlayers().Where(p => p.Name == pm.PassingTo).Single();
-                        Player passingPlayer = GetPlayers().Where(p => p.Name == pm.PassingPlayer).Single();
+                        Player passingToPlayer = GetPlayersMutable().Where(p => p.Name == pm.PassingTo).Single();
+                        Player passingPlayer = GetPlayersMutable().Where(p => p.Name == pm.PassingPlayer).Single();
                         passingToPlayer.Cards.AddRange(pm.PassedCards);
                         passingPlayer.Cards.RemoveAll(c => pm.PassedCards.Any(h => h.Equals(c)));
 
                         // Send new cards to player
-                        Server.Instance().Send(pm, passingToPlayer.Uid);
+                        messages.Add(pm, passingToPlayer.Uid);
                     }
                 }
 
                 // Initiate first trick
-                List<Player> players = GetPlayers();
+                List<Player> players = GetPlayersMutable();
                 int startingPlayer = players.IndexOf(players.Where(p => p.Cards.Any(c => c.Suit == "C" && c.Rank == "2")).Single());
-                StartTrick(startingPlayer, true);
+                messages.Add(StartTrick(startingPlayer, true));
 
                 // Reset pass messages
                 PassMessages = new List<PassMessage>();
             }
+
+            return messages;
         }
 
         /// <summary>
         /// Start passing round.
         /// </summary>
-        private void StartPass()
+        /// <returns> List of messages to be sent </returns>
+        private MessagePackets StartPass()
         {
-            List<Player> players = GetPlayers();
+            MessagePackets messages = new MessagePackets();
+
+            List<Player> players = GetPlayersMutable();
             for (int i = 0; i < players.Count; i++)
             {
                 // Get player to pass to
@@ -208,11 +171,13 @@ namespace CardGameServer
                 // Update and send pass message
                 PassMessage passMessage = new PassMessage(players[i].Name, NUM_TO_PASS, passingTo);
                 PassMessages.Add(passMessage);
-                Server.Instance().Send(passMessage, players[i].Uid);
+                messages.Add(passMessage, players[i].Uid);
             }
 
             // Update pass direction
             CurPass = (CurPass + 1) % PASS_DIRS.Length;
+
+            return messages;
         }
     }
 }

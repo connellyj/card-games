@@ -4,7 +4,6 @@ namespace CardGameServer.Models
 {
     public class Player
     {
-        public string GameName;
         public string Name;
         public string Uid;
         public List<string> TrumpUsed;
@@ -17,13 +16,27 @@ namespace CardGameServer.Models
         public int Order;
         public int TricksTaken;
 
-        public Player(string gameName, string name, string uid, int order)
+        public Player(string name, string uid, int order)
         {
-            GameName = gameName;
             Name = name;
             Uid = uid;
             Order = order;
             ResetScores();
+        }
+
+        public Player(Player p)
+        {
+            Name = p.Name;
+            Uid = p.Uid;
+            TrumpUsed = p.TrumpUsed;
+            Cards = p.Cards;
+            Score = p.Score;
+            SecretScore = p.SecretScore;
+            MeldScore = p.MeldScore;
+            OldScore = p.OldScore;
+            MissedBidBy = p.MissedBidBy;
+            Order = p.Order;
+            TricksTaken = p.TricksTaken;
         }
 
         public void ResetPerHandScores()
